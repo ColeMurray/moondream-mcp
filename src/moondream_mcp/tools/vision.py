@@ -13,6 +13,7 @@ from ..moondream import ImageProcessingError, ModelLoadError, MoondreamError
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
+
     from ..moondream import MoondreamClient
 
 
@@ -228,7 +229,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
             if not image_path.strip():
                 raise ValueError("image_path cannot be empty")
             if operation not in ("caption", "query", "detect", "point"):
-                raise ValueError("operation must be 'caption', 'query', 'detect', or 'point'")
+                raise ValueError(
+                    "operation must be 'caption', 'query', 'detect', or 'point'"
+                )
 
             # Parse parameters
             try:
@@ -249,7 +252,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
             elif operation == "query":
                 question = params.get("question")
                 if not question:
-                    raise ValueError("question parameter is required for query operation")
+                    raise ValueError(
+                        "question parameter is required for query operation"
+                    )
                 result = await moondream_client.query_image(
                     image_path=image_path,
                     question=question,
@@ -258,7 +263,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
             elif operation == "detect":
                 object_name = params.get("object_name")
                 if not object_name:
-                    raise ValueError("object_name parameter is required for detect operation")
+                    raise ValueError(
+                        "object_name parameter is required for detect operation"
+                    )
                 result = await moondream_client.detect_objects(
                     image_path=image_path,
                     object_name=object_name,
@@ -267,7 +274,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
             elif operation == "point":
                 object_name = params.get("object_name")
                 if not object_name:
-                    raise ValueError("object_name parameter is required for point operation")
+                    raise ValueError(
+                        "object_name parameter is required for point operation"
+                    )
                 result = await moondream_client.point_objects(
                     image_path=image_path,
                     object_name=object_name,
@@ -334,7 +343,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
 
             # Validate operation
             if operation not in ("caption", "query", "detect", "point"):
-                raise ValueError("operation must be 'caption', 'query', 'detect', or 'point'")
+                raise ValueError(
+                    "operation must be 'caption', 'query', 'detect', or 'point'"
+                )
 
             # Process each image
             results = []
@@ -357,7 +368,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                     elif operation == "query":
                         question = params.get("question")
                         if not question:
-                            raise ValueError("question parameter is required for query operation")
+                            raise ValueError(
+                                "question parameter is required for query operation"
+                            )
                         result = await moondream_client.query_image(
                             image_path=image_path,
                             question=question,
@@ -366,7 +379,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                     elif operation == "detect":
                         object_name = params.get("object_name")
                         if not object_name:
-                            raise ValueError("object_name parameter is required for detect operation")
+                            raise ValueError(
+                                "object_name parameter is required for detect operation"
+                            )
                         result = await moondream_client.detect_objects(
                             image_path=image_path,
                             object_name=object_name,
@@ -375,7 +390,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                     elif operation == "point":
                         object_name = params.get("object_name")
                         if not object_name:
-                            raise ValueError("object_name parameter is required for point operation")
+                            raise ValueError(
+                                "object_name parameter is required for point operation"
+                            )
                         result = await moondream_client.point_objects(
                             image_path=image_path,
                             object_name=object_name,
@@ -386,7 +403,7 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                         successful_count += 1
                     else:
                         failed_count += 1
-                    
+
                     if result.processing_time_ms:
                         total_processing_time += result.processing_time_ms
 
@@ -421,4 +438,4 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                     "operation": operation,
                 },
                 indent=2,
-            ) 
+            )

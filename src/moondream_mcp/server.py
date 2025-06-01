@@ -58,37 +58,36 @@ def create_server() -> tuple[FastMCP, MoondreamClient]:
 async def run_server_async() -> None:
     """Run the server asynchronously with proper cleanup."""
     mcp, moondream_client = create_server()
-    
+
     # Setup signal handlers for graceful shutdown
     shutdown_event = asyncio.Event()
-    
+
     def signal_handler(signum: int, frame: Optional[object]) -> None:
         print(f"\n🛑 Received signal {signum}, shutting down gracefully...")
         shutdown_event.set()
-    
+
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     try:
         # Use the moondream client as an async context manager
         async with moondream_client:
             print("🚀 Starting Moondream MCP Server...")
             print(f"📱 Device: {moondream_client.config.get_device_info()}")
             print("📡 Running MCP server with stdio transport")
-            
+
             # Create a task for the server
             server_task = asyncio.create_task(mcp.run_async(transport="stdio"))
-            
+
             # Create a task for shutdown monitoring
             shutdown_task = asyncio.create_task(shutdown_event.wait())
-            
+
             # Wait for either the server to complete or shutdown signal
             done, pending = await asyncio.wait(
-                [server_task, shutdown_task],
-                return_when=asyncio.FIRST_COMPLETED
+                [server_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED
             )
-            
+
             # Cancel pending tasks
             for task in pending:
                 task.cancel()
@@ -96,7 +95,7 @@ async def run_server_async() -> None:
                     await task
                 except asyncio.CancelledError:
                     pass
-            
+
             # Check if server task completed with an exception
             if server_task in done:
                 try:
@@ -104,7 +103,7 @@ async def run_server_async() -> None:
                 except Exception as e:
                     print(f"❌ Server error: {e}")
                     raise
-    
+
     except KeyboardInterrupt:
         print("\n🛑 Interrupted by user")
     except Exception as e:
@@ -123,10 +122,10 @@ def main() -> None:
         if sys.version_info < (3, 10):
             print("❌ Python 3.10 or higher is required")
             sys.exit(1)
-        
+
         # Run the async server
         asyncio.run(run_server_async())
-        
+
     except KeyboardInterrupt:
         print("\n🛑 Interrupted by user")
         sys.exit(0)
@@ -136,4 +135,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main() 
+    main()

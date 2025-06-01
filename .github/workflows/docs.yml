@@ -209,23 +209,23 @@ jobs:
       run: |
         if [ -f examples/requirements.txt ]; then
           python -c "
-          from pathlib import Path
-          
-          requirements = Path('examples/requirements.txt').read_text()
-          lines = [line.strip() for line in requirements.split('\n') if line.strip() and not line.startswith('#')]
-          
-          print(f'Found {len(lines)} requirements in examples/requirements.txt')
-          
-          # Check for common issues
-          issues = []
-          for line in lines:
-              if '==' not in line and '>=' not in line and '~=' not in line:
-                  issues.append(f'No version specified for: {line}')
-          
-          if issues:
-              print(f'⚠️  Potential issues: {issues}')
-          else:
-              print('✅ Requirements file looks good')
+from pathlib import Path
+
+requirements = Path('examples/requirements.txt').read_text()
+lines = [line.strip() for line in requirements.split('\n') if line.strip() and not line.startswith('#')]
+
+print(f'Found {len(lines)} requirements in examples/requirements.txt')
+
+# Check for common issues
+issues = []
+for line in lines:
+    if '==' not in line and '>=' not in line and '~=' not in line:
+        issues.append(f'No version specified for: {line}')
+
+if issues:
+    print(f'⚠️  Potential issues: {issues}')
+else:
+    print('✅ Requirements file looks good')
           "
         else
           echo "⚠️  No examples/requirements.txt found"

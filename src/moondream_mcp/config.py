@@ -12,7 +12,6 @@ from typing import Literal, Optional, Tuple
 
 import torch
 
-
 DeviceType = Literal["cpu", "cuda", "mps"]
 
 
@@ -51,7 +50,9 @@ class Config:
 
         # Model configuration
         config.model_name = os.getenv("MOONDREAM_MODEL_NAME", config.model_name)
-        config.model_revision = os.getenv("MOONDREAM_MODEL_REVISION", config.model_revision)
+        config.model_revision = os.getenv(
+            "MOONDREAM_MODEL_REVISION", config.model_revision
+        )
         config.trust_remote_code = _parse_bool(
             os.getenv("MOONDREAM_TRUST_REMOTE_CODE", "true")
         )
@@ -94,7 +95,9 @@ class Config:
             os.getenv("MOONDREAM_TIMEOUT_SECONDS", str(config.timeout_seconds))
         )
         config.max_concurrent_requests = int(
-            os.getenv("MOONDREAM_MAX_CONCURRENT_REQUESTS", str(config.max_concurrent_requests))
+            os.getenv(
+                "MOONDREAM_MAX_CONCURRENT_REQUESTS", str(config.max_concurrent_requests)
+            )
         )
         config.enable_streaming = _parse_bool(
             os.getenv("MOONDREAM_ENABLE_STREAMING", "true")
@@ -102,7 +105,9 @@ class Config:
 
         # Network settings
         config.request_timeout_seconds = int(
-            os.getenv("MOONDREAM_REQUEST_TIMEOUT_SECONDS", str(config.request_timeout_seconds))
+            os.getenv(
+                "MOONDREAM_REQUEST_TIMEOUT_SECONDS", str(config.request_timeout_seconds)
+            )
         )
         config.max_redirects = int(
             os.getenv("MOONDREAM_MAX_REDIRECTS", str(config.max_redirects))
@@ -161,11 +166,11 @@ class Config:
     def validate_dependencies(self) -> None:
         """Validate that required dependencies are available."""
         try:
+            import aiohttp
+            import requests
             import torch
             import transformers
             from PIL import Image
-            import requests
-            import aiohttp
         except ImportError as e:
             raise ValueError(
                 f"Missing required dependency: {e.name}. "
@@ -222,4 +227,4 @@ class Config:
 
 def _parse_bool(value: str) -> bool:
     """Parse a string as a boolean value."""
-    return value.lower() in ("true", "1", "yes", "on") 
+    return value.lower() in ("true", "1", "yes", "on")

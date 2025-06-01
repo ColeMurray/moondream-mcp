@@ -45,4 +45,4 @@ __all__ = [
     "QueryResult",
     "DetectionResult",
     "PointingResult",
-] 
+]

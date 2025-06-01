@@ -101,30 +101,34 @@ class MoondreamClient:
     async def _load_model(self) -> None:
         """Load the Moondream model and tokenizer."""
         try:
-            print(f"🔄 Loading Moondream model: {self.config.model_name}@{self.config.model_revision}")
-            
+            print(
+                f"🔄 Loading Moondream model: {self.config.model_name}@{self.config.model_revision}"
+            )
+
             # Set device
             self._device = torch.device(self.config.device)
             print(f"📱 Using device: {self.config.get_device_info()}")
 
             # Load model in a thread to avoid blocking
             loop = asyncio.get_event_loop()
-            
+
             def _load_model_sync() -> Any:
                 model = AutoModelForCausalLM.from_pretrained(
                     self.config.model_name,
                     revision=self.config.model_revision,
                     trust_remote_code=self.config.trust_remote_code,
-                    torch_dtype=torch.float16 if self.config.device != "cpu" else torch.float32,
+                    torch_dtype=torch.float16
+                    if self.config.device != "cpu"
+                    else torch.float32,
                 )
                 return model.to(self._device)
 
             self._model = await loop.run_in_executor(None, _load_model_sync)
-            
+
             # Load tokenizer (if needed)
             # Note: Moondream2 might not need a separate tokenizer
             # self._tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
-            
+
             print("✅ Moondream model loaded successfully")
 
         except Exception as e:
@@ -138,7 +142,9 @@ class MoondreamClient:
             else:
                 return await self._load_image_from_file(image_path)
         except Exception as e:
-            raise ImageProcessingError(f"Failed to load image from {image_path}: {str(e)}")
+            raise ImageProcessingError(
+                f"Failed to load image from {image_path}: {str(e)}"
+            )
 
     def _is_url(self, path: str) -> bool:
         """Check if path is a URL."""
@@ -151,21 +157,21 @@ class MoondreamClient:
     async def _load_image_from_url(self, url: str) -> Image.Image:
         """Load image from remote URL."""
         await self._ensure_session()
-        
+
         try:
             async with self._session.get(url) as response:
                 if response.status != 200:
                     raise ImageProcessingError(
                         f"Failed to download image: HTTP {response.status}"
                     )
-                
+
                 # Check content type
                 content_type = response.headers.get("content-type", "")
                 if not content_type.startswith("image/"):
                     raise ImageProcessingError(
                         f"URL does not point to an image: {content_type}"
                     )
-                
+
                 # Check file size
                 content_length = response.headers.get("content-length")
                 if content_length:
@@ -174,13 +180,13 @@ class MoondreamClient:
                         raise ImageProcessingError(
                             f"Image too large: {size_mb:.1f}MB > {self.config.max_file_size_mb}MB"
                         )
-                
+
                 # Read image data
                 image_data = await response.read()
                 image = Image.open(io.BytesIO(image_data))
-                
+
                 return self._preprocess_image(image)
-                
+
         except aiohttp.ClientError as e:
             raise ImageProcessingError(f"Network error loading image: {str(e)}")
 
@@ -189,25 +195,25 @@ class MoondreamClient:
         try:
             # Expand user path
             path = Path(file_path).expanduser().resolve()
-            
+
             # Check if file exists
             if not path.exists():
                 raise ImageProcessingError(f"Image file not found: {file_path}")
-            
+
             # Check file size
             size_mb = path.stat().st_size / (1024 * 1024)
             if size_mb > self.config.max_file_size_mb:
                 raise ImageProcessingError(
                     f"Image too large: {size_mb:.1f}MB > {self.config.max_file_size_mb}MB"
                 )
-            
+
             # Read image file
             async with aiofiles.open(path, "rb") as f:
                 image_data = await f.read()
-            
+
             image = Image.open(io.BytesIO(image_data))
             return self._preprocess_image(image)
-            
+
         except Exception as e:
             if isinstance(e, ImageProcessingError):
                 raise
@@ -219,14 +225,14 @@ class MoondreamClient:
             # Convert to RGB if needed
             if image.mode != "RGB":
                 image = image.convert("RGB")
-            
+
             # Resize if too large
             max_width, max_height = self.config.max_image_size
             if image.width > max_width or image.height > max_height:
                 image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-            
+
             return image
-            
+
         except Exception as e:
             raise ImageProcessingError(f"Error preprocessing image: {str(e)}")
 
@@ -239,18 +245,20 @@ class MoondreamClient:
         """Generate a caption for an image."""
         async with self._semaphore:
             start_time = time.time()
-            
+
             try:
                 await self._ensure_model_loaded()
                 image = await self._load_image(image_path)
-                
+
                 # Generate caption
                 loop = asyncio.get_event_loop()
-                
+
                 def _generate_caption() -> Dict[str, Any]:
                     if stream and self.config.enable_streaming:
                         # Stream caption generation
-                        result = self._model.caption(image, length=length.value, stream=True)
+                        result = self._model.caption(
+                            image, length=length.value, stream=True
+                        )
                         caption_parts = []
                         for part in result["caption"]:
                             caption_parts.append(part)
@@ -259,13 +267,13 @@ class MoondreamClient:
                         # Non-streaming caption generation
                         result = self._model.caption(image, length=length.value)
                         caption = result["caption"]
-                    
+
                     return {"caption": caption}
-                
+
                 result = await loop.run_in_executor(None, _generate_caption)
-                
+
                 processing_time = (time.time() - start_time) * 1000
-                
+
                 return CaptionResult(
                     success=True,
                     caption=result["caption"],
@@ -277,14 +285,14 @@ class MoondreamClient:
                         "device": self.config.device,
                     },
                 )
-                
+
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 error_msg = str(e)
-                
+
                 if isinstance(e, (ModelLoadError, ImageProcessingError)):
                     raise
-                
+
                 return CaptionResult(
                     success=False,
                     error_message=error_msg,
@@ -296,22 +304,22 @@ class MoondreamClient:
         """Ask a question about an image."""
         async with self._semaphore:
             start_time = time.time()
-            
+
             try:
                 await self._ensure_model_loaded()
                 image = await self._load_image(image_path)
-                
+
                 # Query the image
                 loop = asyncio.get_event_loop()
-                
+
                 def _query_image() -> Dict[str, Any]:
                     result = self._model.query(image, question)
                     return {"answer": result["answer"]}
-                
+
                 result = await loop.run_in_executor(None, _query_image)
-                
+
                 processing_time = (time.time() - start_time) * 1000
-                
+
                 return QueryResult(
                     success=True,
                     answer=result["answer"],
@@ -323,14 +331,14 @@ class MoondreamClient:
                         "device": self.config.device,
                     },
                 )
-                
+
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 error_msg = str(e)
-                
+
                 if isinstance(e, (ModelLoadError, ImageProcessingError)):
                     raise
-                
+
                 return QueryResult(
                     success=False,
                     error_message=error_msg,
@@ -339,24 +347,26 @@ class MoondreamClient:
                     metadata={"image_path": image_path},
                 )
 
-    async def detect_objects(self, image_path: str, object_name: str) -> DetectionResult:
+    async def detect_objects(
+        self, image_path: str, object_name: str
+    ) -> DetectionResult:
         """Detect objects in an image."""
         async with self._semaphore:
             start_time = time.time()
-            
+
             try:
                 await self._ensure_model_loaded()
                 image = await self._load_image(image_path)
-                
+
                 # Detect objects
                 loop = asyncio.get_event_loop()
-                
+
                 def _detect_objects() -> Dict[str, Any]:
                     result = self._model.detect(image, object_name)
                     return {"objects": result["objects"]}
-                
+
                 result = await loop.run_in_executor(None, _detect_objects)
-                
+
                 # Convert to our format
                 detected_objects = []
                 for obj in result["objects"]:
@@ -374,9 +384,9 @@ class MoondreamClient:
                             ),
                         )
                     )
-                
+
                 processing_time = (time.time() - start_time) * 1000
-                
+
                 return DetectionResult(
                     success=True,
                     objects=detected_objects,
@@ -389,14 +399,14 @@ class MoondreamClient:
                         "device": self.config.device,
                     },
                 )
-                
+
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 error_msg = str(e)
-                
+
                 if isinstance(e, (ModelLoadError, ImageProcessingError)):
                     raise
-                
+
                 return DetectionResult(
                     success=False,
                     error_message=error_msg,
@@ -409,20 +419,20 @@ class MoondreamClient:
         """Point to objects in an image."""
         async with self._semaphore:
             start_time = time.time()
-            
+
             try:
                 await self._ensure_model_loaded()
                 image = await self._load_image(image_path)
-                
+
                 # Point to objects
                 loop = asyncio.get_event_loop()
-                
+
                 def _point_objects() -> Dict[str, Any]:
                     result = self._model.point(image, object_name)
                     return {"points": result["points"]}
-                
+
                 result = await loop.run_in_executor(None, _point_objects)
-                
+
                 # Convert to our format
                 pointed_objects = []
                 for point in result["points"]:
@@ -438,9 +448,9 @@ class MoondreamClient:
                             ),
                         )
                     )
-                
+
                 processing_time = (time.time() - start_time) * 1000
-                
+
                 return PointingResult(
                     success=True,
                     points=pointed_objects,
@@ -453,14 +463,14 @@ class MoondreamClient:
                         "device": self.config.device,
                     },
                 )
-                
+
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 error_msg = str(e)
-                
+
                 if isinstance(e, (ModelLoadError, ImageProcessingError)):
                     raise
-                
+
                 return PointingResult(
                     success=False,
                     error_message=error_msg,
@@ -474,19 +484,19 @@ class MoondreamClient:
         if self._session:
             await self._session.close()
             self._session = None
-        
+
         # Clear model from memory
         if self._model is not None:
             del self._model
             self._model = None
-        
+
         if self._tokenizer is not None:
             del self._tokenizer
             self._tokenizer = None
-        
+
         # Clear CUDA cache if using GPU
         if self.config.device in ("cuda", "mps"):
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-        
-        print("🧹 Moondream client cleaned up") 
+
+        print("🧹 Moondream client cleaned up")
