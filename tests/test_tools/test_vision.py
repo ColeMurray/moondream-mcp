@@ -23,8 +23,12 @@ class TestVisionTools:
 
     @pytest.fixture
     def mock_mcp(self) -> MagicMock:
-        """Create mock FastMCP instance."""
-        return MagicMock()
+        """Create a mock FastMCP instance."""
+        mock = MagicMock()
+        # Mock the tool decorator to capture registered functions
+        mock_decorator = MagicMock()
+        mock.tool.return_value = mock_decorator
+        return mock
 
     @pytest.fixture
     def mock_client(self) -> AsyncMock:
@@ -56,17 +60,16 @@ class TestVisionTools:
     def test_register_vision_tools(
         self, mock_mcp: MagicMock, mock_client: AsyncMock
     ) -> None:
-        """Test that all vision tools are registered."""
+        """Test that all vision tools are registered correctly."""
         register_vision_tools(mock_mcp, mock_client)
 
         # Verify that tool decorator was called for each tool
         assert mock_mcp.tool.call_count == 6  # 6 tools total
 
-        # Get the registered tool functions
-        tool_calls = mock_mcp.tool.call_args_list
-        registered_functions = [
-            call[1]["func"] if "func" in call[1] else call[0][0] for call in tool_calls
-        ]
+        # Get the registered tool functions from the decorator calls
+        mock_decorator = mock_mcp.tool.return_value
+        decorator_calls = mock_decorator.call_args_list
+        registered_functions = [call[0][0] for call in decorator_calls if call[0]]
 
         # Verify all expected tools are registered
         tool_names = [
@@ -82,9 +85,27 @@ class TestVisionTools:
         ]
 
         for expected_tool in expected_tools:
-            assert any(
-                expected_tool in name for name in tool_names
-            ), f"Tool {expected_tool} not found"
+            assert expected_tool in tool_names, f"Tool {expected_tool} not found"
+
+    def _get_registered_function(self, mock_mcp: MagicMock, function_name: str):
+        """Helper method to get a registered function by name."""
+        mock_decorator = mock_mcp.tool.return_value
+        decorator_calls = mock_decorator.call_args_list
+
+        for call in decorator_calls:
+            if call[0] and hasattr(call[0][0], "__name__"):
+                func_name = call[0][0].__name__
+                # Be more specific about matching to avoid conflicts
+                if function_name == "analyze" and func_name == "analyze_image":
+                    return call[0][0]
+                elif function_name == "batch" and func_name == "batch_analyze_images":
+                    return call[0][0]
+                elif function_name in func_name and function_name not in [
+                    "analyze",
+                    "batch",
+                ]:
+                    return call[0][0]
+        return None
 
     @pytest.mark.asyncio
     async def test_caption_image_success(
@@ -99,17 +120,8 @@ class TestVisionTools:
         # Register tools to get the actual function
         register_vision_tools(mock_mcp, mock_client)
 
-        # Get the caption_image function from the mock calls
-        caption_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "caption" in call[0][0].__name__
-            ):
-                caption_func = call[0][0]
-                break
-
+        # Get the caption_image function
+        caption_func = self._get_registered_function(mock_mcp, "caption")
         assert caption_func is not None, "caption_image function not found"
 
         # Test the function
@@ -134,15 +146,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the caption_image function
-        caption_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "caption" in call[0][0].__name__
-            ):
-                caption_func = call[0][0]
-                break
+        caption_func = self._get_registered_function(mock_mcp, "caption")
 
         # Test with invalid length
         result = await caption_func("test.jpg", "invalid", False)
@@ -162,15 +166,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the caption_image function
-        caption_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "caption" in call[0][0].__name__
-            ):
-                caption_func = call[0][0]
-                break
+        caption_func = self._get_registered_function(mock_mcp, "caption")
 
         result = await caption_func("test.jpg", "normal", False)
 
@@ -192,15 +188,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the query_image function
-        query_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "query" in call[0][0].__name__
-            ):
-                query_func = call[0][0]
-                break
+        query_func = self._get_registered_function(mock_mcp, "query")
 
         result = await query_func("test.jpg", "How many people?")
 
@@ -217,15 +205,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the query_image function
-        query_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "query" in call[0][0].__name__
-            ):
-                query_func = call[0][0]
-                break
+        query_func = self._get_registered_function(mock_mcp, "query")
 
         # Test empty image path
         result = await query_func("", "What is this?")
@@ -266,15 +246,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the detect_objects function
-        detect_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "detect" in call[0][0].__name__
-            ):
-                detect_func = call[0][0]
-                break
+        detect_func = self._get_registered_function(mock_mcp, "detect")
 
         result = await detect_func("test.jpg", "person")
 
@@ -308,15 +280,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the point_objects function
-        point_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "point" in call[0][0].__name__
-            ):
-                point_func = call[0][0]
-                break
+        point_func = self._get_registered_function(mock_mcp, "point")
 
         result = await point_func("test.jpg", "car")
 
@@ -340,16 +304,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the analyze_image function
-        analyze_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "analyze" in call[0][0].__name__
-                and "batch" not in call[0][0].__name__
-            ):
-                analyze_func = call[0][0]
-                break
+        analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
         parameters = json.dumps({"length": "detailed", "stream": False})
         result = await analyze_func("test.jpg", "caption", parameters)
@@ -366,16 +321,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the analyze_image function
-        analyze_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "analyze" in call[0][0].__name__
-                and "batch" not in call[0][0].__name__
-            ):
-                analyze_func = call[0][0]
-                break
+        analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
         result = await analyze_func("test.jpg", "invalid_op", "{}")
 
@@ -391,16 +337,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the analyze_image function
-        analyze_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "analyze" in call[0][0].__name__
-                and "batch" not in call[0][0].__name__
-            ):
-                analyze_func = call[0][0]
-                break
+        analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
         result = await analyze_func("test.jpg", "caption", "invalid json")
 
@@ -421,15 +358,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the batch_analyze_images function
-        batch_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "batch" in call[0][0].__name__
-            ):
-                batch_func = call[0][0]
-                break
+        batch_func = self._get_registered_function(mock_mcp, "batch")
 
         image_paths = json.dumps(["test1.jpg", "test2.jpg"])
         parameters = json.dumps({"length": "normal"})
@@ -450,15 +379,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the batch_analyze_images function
-        batch_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "batch" in call[0][0].__name__
-            ):
-                batch_func = call[0][0]
-                break
+        batch_func = self._get_registered_function(mock_mcp, "batch")
 
         # Test invalid JSON
         result = await batch_func("invalid json", "caption", "{}")
@@ -508,15 +429,7 @@ class TestVisionTools:
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the batch_analyze_images function
-        batch_func = None
-        for call in mock_mcp.tool.call_args_list:
-            if (
-                len(call[0]) > 0
-                and hasattr(call[0][0], "__name__")
-                and "batch" in call[0][0].__name__
-            ):
-                batch_func = call[0][0]
-                break
+        batch_func = self._get_registered_function(mock_mcp, "batch")
 
         image_paths = json.dumps(["test1.jpg", "test2.jpg"])
         result = await batch_func(image_paths, "caption", "{}")

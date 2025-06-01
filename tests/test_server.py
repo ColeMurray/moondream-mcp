@@ -111,8 +111,10 @@ class TestServer:
 
     @pytest.mark.asyncio
     @patch("moondream_mcp.server.create_server")
+    @patch("signal.signal")
     async def test_run_server_async_keyboard_interrupt(
         self,
+        mock_signal: MagicMock,
         mock_create_server: MagicMock,
     ) -> None:
         """Test server handling of keyboard interrupt."""
@@ -121,10 +123,11 @@ class TestServer:
         mock_client = AsyncMock()
         mock_create_server.return_value = (mock_mcp, mock_client)
 
-        # Mock the server to raise KeyboardInterrupt after a short delay
+        # Mock the server to run normally but we'll simulate KeyboardInterrupt
+        # by raising it from the asyncio.wait call
         async def mock_run_async(transport: str) -> None:
-            await asyncio.sleep(0.01)  # Small delay to ensure proper setup
-            raise KeyboardInterrupt()
+            # Simulate a long-running server
+            await asyncio.sleep(1)
 
         mock_mcp.run_async = mock_run_async
 
@@ -132,14 +135,22 @@ class TestServer:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
 
-        # Should handle KeyboardInterrupt gracefully without re-raising
-        try:
-            await run_server_async()
-        except KeyboardInterrupt:
-            # This should not happen as the function should handle it
-            pytest.fail("KeyboardInterrupt should be handled gracefully")
+        # Mock asyncio.wait to raise KeyboardInterrupt
+        original_wait = asyncio.wait
 
-        # Verify cleanup was called
+        async def mock_wait(*args, **kwargs):
+            # Let it start, then raise KeyboardInterrupt
+            await asyncio.sleep(0.01)
+            raise KeyboardInterrupt()
+
+        with patch("asyncio.wait", side_effect=mock_wait):
+            # Should handle KeyboardInterrupt gracefully without re-raising
+            await run_server_async()
+
+        # Verify setup and cleanup were called
+        mock_create_server.assert_called_once()
+        mock_signal.assert_called()  # Signal handlers should be registered
+        mock_client.__aenter__.assert_called_once()
         mock_client.__aexit__.assert_called_once()
 
     @pytest.mark.asyncio
