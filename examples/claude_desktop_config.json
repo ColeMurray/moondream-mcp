@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "moondream": {
+      "command": "moondream-mcp",
+      "env": {
+        "MOONDREAM_DEVICE": "auto",
+        "MOONDREAM_MAX_IMAGE_SIZE": "2048x2048",
+        "MOONDREAM_MAX_CONCURRENT_REQUESTS": "3",
+        "MOONDREAM_TIMEOUT_SECONDS": "120"
+      }
+    }
+  }
+} 
