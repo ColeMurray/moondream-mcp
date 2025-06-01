@@ -188,6 +188,7 @@ Thumbs.db
 *.log
 temp/
 tmp/
+PLAN.md
 
 # Model files (large files that shouldn't be in git)
 models/
