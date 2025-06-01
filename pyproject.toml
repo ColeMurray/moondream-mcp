@@ -67,7 +67,9 @@ dev = [
     "mypy>=1.5.0",
     "bandit[toml]>=1.7.0",
     "safety>=2.3.0",
-    "pre-commit>=3.0.0"
+    "pre-commit>=3.0.0",
+    "types-requests>=2.31.0",
+    "types-aiofiles>=23.0.0"
 ]
 docs = [
     "sphinx>=7.0.0",

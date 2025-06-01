@@ -36,7 +36,7 @@ def create_server() -> tuple[FastMCP, MoondreamClient]:
         sys.exit(1)
 
     # Create MCP server
-    mcp = FastMCP(name="moondream-mcp", version="1.0.0")
+    mcp: FastMCP = FastMCP(name="moondream-mcp", version="1.0.0")
 
     # Create Moondream client
     moondream_client = MoondreamClient(config)

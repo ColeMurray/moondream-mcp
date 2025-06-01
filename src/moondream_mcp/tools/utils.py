@@ -113,7 +113,10 @@ def parse_json_parameters(parameters: str) -> Dict[str, Any]:
         ValueError: If JSON is invalid
     """
     try:
-        return json.loads(parameters)
+        result = json.loads(parameters)
+        if not isinstance(result, dict):
+            raise ValueError("Parameters must be a JSON object")
+        return result
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON parameters: {e}")
 

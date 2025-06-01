@@ -6,10 +6,17 @@ object detection, and visual pointing.
 """
 
 import json
-from typing import TYPE_CHECKING, List
+import time
+from typing import TYPE_CHECKING, List, Union
 
-from ..models import CaptionLength
-from ..moondream import ImageProcessingError, ModelLoadError, MoondreamError
+from moondream_mcp.models import (
+    CaptionLength,
+    CaptionResult,
+    DetectionResult,
+    PointingResult,
+    QueryResult,
+)
+from moondream_mcp.moondream import ImageProcessingError, ModelLoadError, MoondreamError
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
@@ -240,6 +247,7 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
                 raise ValueError("parameters must be valid JSON")
 
             # Route to appropriate method
+            result: Union[CaptionResult, QueryResult, DetectionResult, PointingResult]
             if operation == "caption":
                 length = params.get("length", "normal")
                 stream = params.get("stream", False)
@@ -356,6 +364,9 @@ def register_vision_tools(mcp: "FastMCP", moondream_client: "MoondreamClient") -
             for image_path in paths:
                 try:
                     # Route to appropriate method
+                    result: Union[
+                        CaptionResult, QueryResult, DetectionResult, PointingResult
+                    ]
                     if operation == "caption":
                         length = params.get("length", "normal")
                         stream = params.get("stream", False)

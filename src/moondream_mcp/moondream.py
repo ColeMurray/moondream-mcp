@@ -158,6 +158,9 @@ class MoondreamClient:
         """Load image from remote URL."""
         await self._ensure_session()
 
+        # Type assertion to help mypy
+        assert self._session is not None
+
         try:
             async with self._session.get(url) as response:
                 if response.status != 200:
@@ -254,6 +257,9 @@ class MoondreamClient:
                 loop = asyncio.get_event_loop()
 
                 def _generate_caption() -> Dict[str, Any]:
+                    # Type assertion to help mypy
+                    assert self._model is not None
+
                     if stream and self.config.enable_streaming:
                         # Stream caption generation
                         result = self._model.caption(
@@ -279,6 +285,8 @@ class MoondreamClient:
                     caption=result["caption"],
                     length=length,
                     processing_time_ms=processing_time,
+                    confidence=None,  # Moondream doesn't provide confidence for captions
+                    error_message=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -298,6 +306,9 @@ class MoondreamClient:
                     error_message=error_msg,
                     processing_time_ms=processing_time,
                     metadata={"image_path": image_path},
+                    caption=None,
+                    confidence=None,
+                    length=None,
                 )
 
     async def query_image(self, image_path: str, question: str) -> QueryResult:
@@ -313,6 +324,8 @@ class MoondreamClient:
                 loop = asyncio.get_event_loop()
 
                 def _query_image() -> Dict[str, Any]:
+                    # Type assertion to help mypy
+                    assert self._model is not None
                     result = self._model.query(image, question)
                     return {"answer": result["answer"]}
 
@@ -325,6 +338,8 @@ class MoondreamClient:
                     answer=result["answer"],
                     question=question,
                     processing_time_ms=processing_time,
+                    confidence=None,  # Moondream doesn't provide confidence for VQA
+                    error_message=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -344,6 +359,8 @@ class MoondreamClient:
                     error_message=error_msg,
                     question=question,
                     processing_time_ms=processing_time,
+                    answer=None,
+                    confidence=None,
                     metadata={"image_path": image_path},
                 )
 
@@ -362,6 +379,8 @@ class MoondreamClient:
                 loop = asyncio.get_event_loop()
 
                 def _detect_objects() -> Dict[str, Any]:
+                    # Type assertion to help mypy
+                    assert self._model is not None
                     result = self._model.detect(image, object_name)
                     return {"objects": result["objects"]}
 
@@ -393,6 +412,7 @@ class MoondreamClient:
                     object_name=object_name,
                     total_found=len(detected_objects),
                     processing_time_ms=processing_time,
+                    error_message=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -428,6 +448,8 @@ class MoondreamClient:
                 loop = asyncio.get_event_loop()
 
                 def _point_objects() -> Dict[str, Any]:
+                    # Type assertion to help mypy
+                    assert self._model is not None
                     result = self._model.point(image, object_name)
                     return {"points": result["points"]}
 
@@ -457,6 +479,7 @@ class MoondreamClient:
                     object_name=object_name,
                     total_found=len(pointed_objects),
                     processing_time_ms=processing_time,
+                    error_message=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",

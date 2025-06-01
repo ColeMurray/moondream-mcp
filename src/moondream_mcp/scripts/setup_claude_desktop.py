@@ -101,15 +101,16 @@ def create_moondream_mcp_config(
     Returns:
         MCP server configuration dictionary
     """
-    config = {"command": executable_path, "args": [], "env": environment_vars or {}}
+    env_dict: Dict[str, str] = environment_vars or {}
+    config = {"command": executable_path, "args": [], "env": env_dict}
 
     # Add default environment variables if not specified
-    if "MOONDREAM_DEVICE" not in config["env"]:
+    if "MOONDREAM_DEVICE" not in env_dict:
         # Auto-detect best device
         if platform.system() == "Darwin" and platform.machine() == "arm64":
-            config["env"]["MOONDREAM_DEVICE"] = "mps"  # Apple Silicon
+            env_dict["MOONDREAM_DEVICE"] = "mps"  # Apple Silicon
         else:
-            config["env"]["MOONDREAM_DEVICE"] = "auto"
+            env_dict["MOONDREAM_DEVICE"] = "auto"
 
     return config
 
@@ -127,7 +128,12 @@ def load_existing_config(config_path: Path) -> Dict[str, Any]:
     if config_path.exists():
         try:
             with open(config_path, "r") as f:
-                return json.load(f)
+                result = json.load(f)
+                if isinstance(result, dict):
+                    return result
+                else:
+                    print("Warning: Config file does not contain a JSON object")
+                    return {}
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Could not read existing config: {e}")
             return {}
