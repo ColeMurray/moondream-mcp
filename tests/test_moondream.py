@@ -205,13 +205,13 @@ class TestMoondreamClient:
         self, client: MoondreamClient, sample_image: Image.Image
     ) -> None:
         """Test successful image captioning."""
-        with patch.object(
-            client, "_ensure_model_loaded"
-        ) as mock_ensure_model, patch.object(
-            client, "_load_image", return_value=sample_image
-        ) as mock_load_image, patch(
-            "asyncio.get_event_loop"
-        ) as mock_get_loop:
+        with (
+            patch.object(client, "_ensure_model_loaded") as mock_ensure_model,
+            patch.object(
+                client, "_load_image", return_value=sample_image
+            ) as mock_load_image,
+            patch("asyncio.get_event_loop") as mock_get_loop,
+        ):
             # Mock the model
             mock_model = MagicMock()
             mock_model.caption.return_value = {"caption": "A red square"}
@@ -250,13 +250,13 @@ class TestMoondreamClient:
         self, client: MoondreamClient, sample_image: Image.Image
     ) -> None:
         """Test successful visual question answering."""
-        with patch.object(
-            client, "_ensure_model_loaded"
-        ) as mock_ensure_model, patch.object(
-            client, "_load_image", return_value=sample_image
-        ) as mock_load_image, patch(
-            "asyncio.get_event_loop"
-        ) as mock_get_loop:
+        with (
+            patch.object(client, "_ensure_model_loaded") as mock_ensure_model,
+            patch.object(
+                client, "_load_image", return_value=sample_image
+            ) as mock_load_image,
+            patch("asyncio.get_event_loop") as mock_get_loop,
+        ):
             # Mock the model
             mock_model = MagicMock()
             mock_model.query.return_value = {"answer": "Yes, it is red"}
@@ -282,13 +282,13 @@ class TestMoondreamClient:
         self, client: MoondreamClient, sample_image: Image.Image
     ) -> None:
         """Test successful object detection."""
-        with patch.object(
-            client, "_ensure_model_loaded"
-        ) as mock_ensure_model, patch.object(
-            client, "_load_image", return_value=sample_image
-        ) as mock_load_image, patch(
-            "asyncio.get_event_loop"
-        ) as mock_get_loop:
+        with (
+            patch.object(client, "_ensure_model_loaded") as mock_ensure_model,
+            patch.object(
+                client, "_load_image", return_value=sample_image
+            ) as mock_load_image,
+            patch("asyncio.get_event_loop") as mock_get_loop,
+        ):
             # Mock the model
             mock_model = MagicMock()
             mock_model.detect.return_value = {
@@ -329,13 +329,13 @@ class TestMoondreamClient:
         self, client: MoondreamClient, sample_image: Image.Image
     ) -> None:
         """Test successful visual pointing."""
-        with patch.object(
-            client, "_ensure_model_loaded"
-        ) as mock_ensure_model, patch.object(
-            client, "_load_image", return_value=sample_image
-        ) as mock_load_image, patch(
-            "asyncio.get_event_loop"
-        ) as mock_get_loop:
+        with (
+            patch.object(client, "_ensure_model_loaded") as mock_ensure_model,
+            patch.object(
+                client, "_load_image", return_value=sample_image
+            ) as mock_load_image,
+            patch("asyncio.get_event_loop") as mock_get_loop,
+        ):
             # Mock the model
             mock_model = MagicMock()
             mock_model.point.return_value = {
@@ -379,9 +379,11 @@ class TestMoondreamClient:
         # Set a low concurrency limit
         client._semaphore = asyncio.Semaphore(1)
 
-        with patch.object(client, "_ensure_model_loaded"), patch.object(
-            client, "_load_image", return_value=sample_image
-        ), patch("asyncio.get_event_loop") as mock_get_loop:
+        with (
+            patch.object(client, "_ensure_model_loaded"),
+            patch.object(client, "_load_image", return_value=sample_image),
+            patch("asyncio.get_event_loop") as mock_get_loop,
+        ):
             mock_model = MagicMock()
             mock_model.caption.return_value = {"caption": "Test"}
             client._model = mock_model

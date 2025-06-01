@@ -117,9 +117,9 @@ class MoondreamClient:
                     self.config.model_name,
                     revision=self.config.model_revision,
                     trust_remote_code=self.config.trust_remote_code,
-                    torch_dtype=torch.float16
-                    if self.config.device != "cpu"
-                    else torch.float32,
+                    torch_dtype=(
+                        torch.float16 if self.config.device != "cpu" else torch.float32
+                    ),
                 )
                 return model.to(self._device)
 

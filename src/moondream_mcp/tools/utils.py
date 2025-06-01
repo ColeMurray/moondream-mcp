@@ -149,7 +149,7 @@ def parse_image_paths(image_paths_json: str) -> List[str]:
 
 
 def format_result_as_json(
-    result: Union[CaptionResult, QueryResult, DetectionResult, PointingResult]
+    result: Union[CaptionResult, QueryResult, DetectionResult, PointingResult],
 ) -> str:
     """
     Format analysis result as JSON string.
