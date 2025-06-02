@@ -1,11 +1,12 @@
 """
-Pydantic models for Moondream MCP Server.
+Data models for moondream-mcp.
 
-Defines request and response models for type safety and validation.
+Defines Pydantic models for API requests, responses, and internal data structures
+used throughout the vision analysis tools.
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -148,6 +149,25 @@ class BatchAnalysisRequest(BaseModel):
 # Response Models
 
 
+class StandardError(BaseModel):
+    """Standardized error response model."""
+
+    success: bool = Field(default=False, description="Always false for errors")
+
+    error_message: str = Field(..., description="Human-readable error message")
+
+    error_code: str = Field(..., description="Machine-readable error code")
+
+    error_context: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional context about the error"
+    )
+
+    timestamp: Optional[str] = Field(
+        None, description="ISO timestamp when error occurred"
+    )
+
+
 class AnalysisResult(BaseModel):
     """Base result model for image analysis."""
 
@@ -161,9 +181,30 @@ class AnalysisResult(BaseModel):
         None, description="Error message if analysis failed"
     )
 
+    error_code: Optional[str] = Field(
+        None, description="Machine-readable error code if analysis failed"
+    )
+
     metadata: Dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata about the analysis"
     )
+
+    @classmethod
+    def create_error(
+        cls,
+        error_message: str,
+        error_code: str = "ANALYSIS_ERROR",
+        metadata: Optional[Dict[str, Any]] = None,
+        processing_time_ms: Optional[float] = None,
+    ) -> "AnalysisResult":
+        """Create a standardized error result."""
+        return cls(
+            success=False,
+            error_message=error_message,
+            error_code=error_code,
+            metadata=metadata or {},
+            processing_time_ms=processing_time_ms,
+        )
 
 
 class CaptionResult(AnalysisResult):

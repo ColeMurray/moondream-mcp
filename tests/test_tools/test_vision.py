@@ -148,13 +148,12 @@ class TestVisionTools:
         # Get the caption_image function
         caption_func = self._get_registered_function(mock_mcp, "caption")
 
-        # Test with invalid length
         result = await caption_func("test.jpg", "invalid", False)
-
         result_data = json.loads(result)
+
         assert result_data["success"] is False
-        assert "length must be" in result_data["error_message"]
-        assert result_data["error_code"] == "INVALID_REQUEST"
+        assert "Invalid caption length" in result_data["error_message"]
+        assert result_data["error_code"] == "INVALID_LENGTH"
 
     @pytest.mark.asyncio
     async def test_caption_image_model_error(
@@ -173,7 +172,7 @@ class TestVisionTools:
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert result_data["error_message"] == "Model failed to load"
-        assert result_data["error_code"] == "MODEL_LOAD_ERROR"
+        assert result_data["error_code"] == "PROCESSING_ERROR"
 
     @pytest.mark.asyncio
     async def test_query_image_success(
@@ -211,13 +210,15 @@ class TestVisionTools:
         result = await query_func("", "What is this?")
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "image_path cannot be empty" in result_data["error_message"]
+        assert "Image path cannot be empty" in result_data["error_message"]
+        assert result_data["error_code"] == "EMPTY_PATH"
 
         # Test empty question
         result = await query_func("test.jpg", "")
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "question cannot be empty" in result_data["error_message"]
+        assert "Question cannot be empty" in result_data["error_message"]
+        assert result_data["error_code"] == "EMPTY_QUESTION"
 
     @pytest.mark.asyncio
     async def test_detect_objects_success(
@@ -292,26 +293,41 @@ class TestVisionTools:
         assert result_data["points"][0]["point"]["x"] == 0.5
 
     @pytest.mark.asyncio
-    async def test_analyze_image_caption_operation(
-        self,
-        mock_mcp: MagicMock,
-        mock_client: AsyncMock,
-        sample_caption_result: CaptionResult,
+    async def test_analyze_image_caption(
+        self, mock_mcp: MagicMock, mock_client: AsyncMock
     ) -> None:
-        """Test analyze_image with caption operation."""
-        mock_client.caption_image.return_value = sample_caption_result
+        """Test analyze_image with caption operation using typed parameters."""
+        # Mock successful caption response
+        mock_client.caption_image.return_value = CaptionResult(
+            success=True,
+            caption="A beautiful sunset",
+            processing_time_ms=150.0,
+            metadata={"image_path": "test.jpg"},
+        )
 
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the analyze_image function
         analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
-        parameters = json.dumps({"length": "detailed", "stream": False})
-        result = await analyze_func("test.jpg", "caption", parameters)
+        # Test with typed parameters instead of JSON
+        result = await analyze_func(
+            image_path="test.jpg", 
+            operation="caption", 
+            length="normal",
+            stream=False
+        )
 
         result_data = json.loads(result)
         assert result_data["success"] is True
-        assert result_data["caption"] == "A red square on a white background"
+        assert result_data["caption"] == "A beautiful sunset"
+        
+        # Verify the client was called with correct parameters
+        mock_client.caption_image.assert_called_once_with(
+            image_path="test.jpg",
+            length="normal",
+            stream=False,
+        )
 
     @pytest.mark.asyncio
     async def test_analyze_image_invalid_operation(
@@ -323,27 +339,46 @@ class TestVisionTools:
         # Get the analyze_image function
         analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
-        result = await analyze_func("test.jpg", "invalid_op", "{}")
-
+        result = await analyze_func(
+            "test.jpg", "invalid_op", "", "", "normal", False
+        )
         result_data = json.loads(result)
+
         assert result_data["success"] is False
-        assert "operation must be" in result_data["error_message"]
+        assert "Invalid operation" in result_data["error_message"]
+        assert result_data["error_code"] == "INVALID_OPERATION"
 
     @pytest.mark.asyncio
-    async def test_analyze_image_invalid_json_parameters(
+    async def test_analyze_image_missing_required_params(
         self, mock_mcp: MagicMock, mock_client: AsyncMock
     ) -> None:
-        """Test analyze_image with invalid JSON parameters."""
+        """Test analyze_image with missing required parameters for operations."""
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the analyze_image function
         analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
-        result = await analyze_func("test.jpg", "caption", "invalid json")
-
+        # Test query operation without question
+        result = await analyze_func(
+            image_path="test.jpg", 
+            operation="query"
+            # Missing question parameter
+        )
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "parameters must be valid JSON" in result_data["error_message"]
+        assert "question parameter is required" in result_data["error_message"]
+        assert result_data["error_code"] == "MISSING_QUESTION"
+
+        # Test detect operation without object_name
+        result = await analyze_func(
+            image_path="test.jpg", 
+            operation="detect"
+            # Missing object_name parameter
+        )
+        result_data = json.loads(result)
+        assert result_data["success"] is False
+        assert "object_name parameter is required" in result_data["error_message"]
+        assert result_data["error_code"] == "MISSING_OBJECT_NAME"
 
     @pytest.mark.asyncio
     async def test_batch_analyze_images_success(
@@ -352,7 +387,7 @@ class TestVisionTools:
         mock_client: AsyncMock,
         sample_caption_result: CaptionResult,
     ) -> None:
-        """Test successful batch image analysis."""
+        """Test successful batch image analysis with typed parameters."""
         mock_client.caption_image.return_value = sample_caption_result
 
         register_vision_tools(mock_mcp, mock_client)
@@ -361,56 +396,65 @@ class TestVisionTools:
         batch_func = self._get_registered_function(mock_mcp, "batch")
 
         image_paths = json.dumps(["test1.jpg", "test2.jpg"])
-        parameters = json.dumps({"length": "normal"})
 
-        result = await batch_func(image_paths, "caption", parameters)
+        # Use typed parameters instead of JSON
+        result = await batch_func(
+            image_paths=image_paths, 
+            operation="caption", 
+            length="normal"
+        )
 
         result_data = json.loads(result)
         assert result_data["total_processed"] == 2
-        assert result_data["total_successful"] == 2
-        assert result_data["total_failed"] == 0
+        assert result_data["successful_count"] == 2  # Updated field name
+        assert result_data["failed_count"] == 0      # Updated field name
         assert len(result_data["results"]) == 2
 
     @pytest.mark.asyncio
     async def test_batch_analyze_images_invalid_paths(
         self, mock_mcp: MagicMock, mock_client: AsyncMock
     ) -> None:
-        """Test batch_analyze_images with invalid image paths."""
+        """Test batch_analyze_images with invalid paths JSON."""
         register_vision_tools(mock_mcp, mock_client)
 
         # Get the batch_analyze_images function
         batch_func = self._get_registered_function(mock_mcp, "batch")
 
         # Test invalid JSON
-        result = await batch_func("invalid json", "caption", "{}")
+        result = await batch_func(
+            image_paths="invalid json", 
+            operation="caption"
+        )
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "image_paths must be valid JSON array" in result_data["error_message"]
+        assert "Invalid JSON format" in result_data["error_message"]
+        assert result_data["error_code"] == "INVALID_JSON"
 
         # Test non-array
-        result = await batch_func('"not an array"', "caption", "{}")
+        result = await batch_func(
+            image_paths='"not an array"',
+            operation="caption"
+        )
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "image_paths must be a JSON array" in result_data["error_message"]
+        assert "Image paths must be a JSON array" in result_data["error_message"]
+        assert result_data["error_code"] == "INVALID_PATHS_TYPE"
 
         # Test empty array
-        result = await batch_func("[]", "caption", "{}")
+        result = await batch_func(
+            image_paths="[]",
+            operation="caption"
+        )
         result_data = json.loads(result)
         assert result_data["success"] is False
-        assert "image_paths cannot be empty" in result_data["error_message"]
-
-        # Test too many images
-        too_many_paths = json.dumps([f"test{i}.jpg" for i in range(11)])
-        result = await batch_func(too_many_paths, "caption", "{}")
-        result_data = json.loads(result)
-        assert result_data["success"] is False
-        assert "Cannot process more than 10 images" in result_data["error_message"]
+        assert "Image paths array cannot be empty" in result_data["error_message"]
+        assert result_data["error_code"] == "EMPTY_PATHS_ARRAY"
 
     @pytest.mark.asyncio
     async def test_batch_analyze_images_mixed_results(
         self, mock_mcp: MagicMock, mock_client: AsyncMock
     ) -> None:
-        """Test batch analysis with mixed success/failure results."""
+        """Test batch analysis with mixed success/failure results using typed parameters."""
 
         # Mock client to succeed for first image, fail for second
         def mock_caption_side_effect(image_path: str, **kwargs):
@@ -428,22 +472,65 @@ class TestVisionTools:
 
         register_vision_tools(mock_mcp, mock_client)
 
-        # Get the batch_analyze_images function
+        # Get the batch function
         batch_func = self._get_registered_function(mock_mcp, "batch")
 
+        # Test with typed parameters instead of JSON
         image_paths = json.dumps(["test1.jpg", "test2.jpg"])
-        result = await batch_func(image_paths, "caption", "{}")
+        result = await batch_func(
+            image_paths=image_paths, 
+            operation="caption", 
+            length="normal"
+        )
 
         result_data = json.loads(result)
+        
+        # Check if this is an error response instead of batch result
+        if "success" in result_data and not result_data["success"]:
+            # This is an error response, not a batch result
+            assert False, f"Batch processing failed: {result_data.get('error_message', 'Unknown error')}"
+        
         assert result_data["total_processed"] == 2
-        assert result_data["total_successful"] == 1
-        assert result_data["total_failed"] == 1
-        assert len(result_data["results"]) == 2
+        assert result_data["successful_count"] == 1
+        assert result_data["failed_count"] == 1
 
-        # First result should be successful
+        # Check individual results
         assert result_data["results"][0]["success"] is True
         assert result_data["results"][0]["caption"] == "Success"
-
-        # Second result should be failed
         assert result_data["results"][1]["success"] is False
         assert "Failed to process image" in result_data["results"][1]["error_message"]
+
+    @pytest.mark.asyncio
+    async def test_analyze_image_query(
+        self, mock_mcp: MagicMock, mock_client: AsyncMock
+    ) -> None:
+        """Test analyze_image with query operation using typed parameters."""
+        # Mock successful query response
+        mock_client.query_image.return_value = QueryResult(
+            success=True,
+            answer="This is a test image",
+            processing_time_ms=200.0,
+            metadata={"image_path": "test.jpg", "question": "What is this?"},
+        )
+
+        register_vision_tools(mock_mcp, mock_client)
+
+        # Get the analyze_image function
+        analyze_func = self._get_registered_function(mock_mcp, "analyze")
+
+        # Test with typed parameters instead of JSON
+        result = await analyze_func(
+            image_path="test.jpg", 
+            operation="query", 
+            question="What is this?"
+        )
+
+        result_data = json.loads(result)
+        assert result_data["success"] is True
+        assert result_data["answer"] == "This is a test image"
+        
+        # Verify the client was called with correct parameters
+        mock_client.query_image.assert_called_once_with(
+            image_path="test.jpg",
+            question="What is this?",
+        )

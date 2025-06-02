@@ -1,22 +1,22 @@
 """
-Moondream client wrapper for MCP Server.
+Moondream client for vision analysis.
 
-Provides a clean interface to the Moondream model with proper error handling,
-resource management, and support for both local files and remote URLs.
+Provides async interface to the Moondream vision model for image captioning,
+visual question answering, object detection, and visual pointing.
 """
 
 import asyncio
 import io
 import time
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import aiofiles
 import aiohttp
 import torch
 from PIL import Image
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM
 
 from .config import Config
 from .models import (
@@ -287,6 +287,7 @@ class MoondreamClient:
                     processing_time_ms=processing_time,
                     confidence=None,  # Moondream doesn't provide confidence for captions
                     error_message=None,
+                    error_code=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -304,6 +305,7 @@ class MoondreamClient:
                 return CaptionResult(
                     success=False,
                     error_message=error_msg,
+                    error_code="PROCESSING_ERROR",
                     processing_time_ms=processing_time,
                     metadata={"image_path": image_path},
                     caption=None,
@@ -340,6 +342,7 @@ class MoondreamClient:
                     processing_time_ms=processing_time,
                     confidence=None,  # Moondream doesn't provide confidence for VQA
                     error_message=None,
+                    error_code=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -357,6 +360,7 @@ class MoondreamClient:
                 return QueryResult(
                     success=False,
                     error_message=error_msg,
+                    error_code="PROCESSING_ERROR",
                     question=question,
                     processing_time_ms=processing_time,
                     answer=None,
@@ -413,6 +417,7 @@ class MoondreamClient:
                     total_found=len(detected_objects),
                     processing_time_ms=processing_time,
                     error_message=None,
+                    error_code=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -430,6 +435,7 @@ class MoondreamClient:
                 return DetectionResult(
                     success=False,
                     error_message=error_msg,
+                    error_code="PROCESSING_ERROR",
                     object_name=object_name,
                     processing_time_ms=processing_time,
                     metadata={"image_path": image_path},
@@ -480,6 +486,7 @@ class MoondreamClient:
                     total_found=len(pointed_objects),
                     processing_time_ms=processing_time,
                     error_message=None,
+                    error_code=None,
                     metadata={
                         "image_path": image_path,
                         "image_size": f"{image.width}x{image.height}",
@@ -497,6 +504,7 @@ class MoondreamClient:
                 return PointingResult(
                     success=False,
                     error_message=error_msg,
+                    error_code="PROCESSING_ERROR",
                     object_name=object_name,
                     processing_time_ms=processing_time,
                     metadata={"image_path": image_path},

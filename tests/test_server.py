@@ -48,7 +48,7 @@ class TestServer:
             name="moondream-mcp", version="1.0.0"
         )
         mock_client_class.assert_called_once_with(mock_config)
-        mock_register_tools.assert_called_once_with(mock_mcp, mock_client)
+        mock_register_tools.assert_called_once_with(mock_mcp, mock_client, mock_config)
 
         # Verify return values
         assert mcp == mock_mcp
