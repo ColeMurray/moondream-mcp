@@ -9,28 +9,28 @@ from unittest.mock import MagicMock
 import pytest
 
 from moondream_mcp.models import (
+    BoundingBox,
     CaptionLength,
     CaptionResult,
-    DetectionResult,
-    PointingResult,
-    QueryResult,
-    BoundingBox,
     DetectedObject,
+    DetectionResult,
     Point,
     PointedObject,
+    PointingResult,
+    QueryResult,
 )
 from moondream_mcp.tools.utils import (
-    create_error_response,
-    validate_caption_length,
-    validate_operation,
-    parse_json_parameters,
-    parse_image_paths,
-    format_result_as_json,
     create_batch_summary,
-    sanitize_error_message,
-    validate_input_parameters,
+    create_error_response,
+    format_result_as_json,
     get_error_code_for_exception,
     measure_time_ms,
+    parse_image_paths,
+    parse_json_parameters,
+    sanitize_error_message,
+    validate_caption_length,
+    validate_input_parameters,
+    validate_operation,
 )
 
 

@@ -8,7 +8,7 @@ object detection, and visual pointing.
 import asyncio
 import json
 import time
-from typing import TYPE_CHECKING, Dict, Union, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from moondream_mcp.models import (
     CaptionResult,
@@ -19,19 +19,19 @@ from moondream_mcp.models import (
 from moondream_mcp.moondream import ImageProcessingError, ModelLoadError
 from moondream_mcp.validation import (
     ValidationError,
-    validate_image_path,
-    validate_question,
-    validate_object_name,
     validate_caption_length,
-    validate_operation,
+    validate_image_path,
     validate_image_paths_list,
+    validate_object_name,
+    validate_operation,
+    validate_question,
 )
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
-    from ..moondream import MoondreamClient
     from ..config import Config
+    from ..moondream import MoondreamClient
 
 
 async def _route_single_operation(
@@ -126,6 +126,7 @@ def _create_error_response_dict(
 ) -> Dict[str, Any]:
     """Create standardized error response as dictionary."""
     from datetime import datetime, timezone
+
     from .utils import get_error_code_for_exception
 
     # Determine error code and message using centralized logic

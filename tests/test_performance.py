@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from moondream_mcp.config import Config
-from moondream_mcp.models import CaptionResult, CaptionLength
+from moondream_mcp.models import CaptionLength, CaptionResult
 from moondream_mcp.tools.vision import register_vision_tools
 
 

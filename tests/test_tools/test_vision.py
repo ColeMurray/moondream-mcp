@@ -356,7 +356,7 @@ class TestVisionTools:
         # Test query operation without question
         result = await analyze_func(
             image_path="test.jpg",
-            operation="query"
+            operation="query",
             # Missing question parameter
         )
         result_data = json.loads(result)
@@ -367,7 +367,7 @@ class TestVisionTools:
         # Test detect operation without object_name
         result = await analyze_func(
             image_path="test.jpg",
-            operation="detect"
+            operation="detect",
             # Missing object_name parameter
         )
         result_data = json.loads(result)
