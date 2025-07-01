@@ -1,0 +1,25 @@
+# Moondream MCP Server Environment Variables
+# Copy this file to .env and modify as needed
+
+# Model Configuration
+MOONDREAM_MODEL_NAME=vikhyatk/moondream2
+MOONDREAM_MODEL_REVISION=2025-01-09
+MOONDREAM_TRUST_REMOTE_CODE=true
+
+# Device Configuration
+# Options: auto, cpu, cuda, mps
+MOONDREAM_DEVICE=auto
+
+# Image Processing Settings
+MOONDREAM_MAX_IMAGE_SIZE=2048x2048
+MOONDREAM_MAX_FILE_SIZE_MB=50
+
+# Performance Settings
+MOONDREAM_TIMEOUT_SECONDS=120
+MOONDREAM_MAX_CONCURRENT_REQUESTS=5
+MOONDREAM_ENABLE_STREAMING=true
+
+# Network Settings (for remote URLs)
+MOONDREAM_REQUEST_TIMEOUT_SECONDS=30
+MOONDREAM_MAX_REDIRECTS=5
+MOONDREAM_USER_AGENT=Moondream-MCP/1.0.0 
