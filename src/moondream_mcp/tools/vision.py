@@ -128,7 +128,7 @@ def _create_error_response_dict(
     context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Create standardized error response as dictionary."""
-    from datetime import datetime
+    from datetime import datetime, timezone
     from .utils import get_error_code_for_exception
 
     # Determine error code and message using centralized logic
@@ -154,7 +154,7 @@ def _create_error_response_dict(
         "error_message": error_message,
         "error_code": error_code,
         "error_context": context or {},
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "operation": operation,
     }
 
@@ -211,7 +211,7 @@ def register_vision_tools(
                 stream=stream,
             )
 
-            return json.dumps(result.dict(), indent=2)
+            return json.dumps(result.model_dump(), indent=2)
 
         except Exception as e:
             return _create_error_response(
@@ -242,7 +242,7 @@ def register_vision_tools(
                 question=validated_question,
             )
 
-            return json.dumps(result.dict(), indent=2)
+            return json.dumps(result.model_dump(), indent=2)
 
         except Exception as e:
             return _create_error_response(
@@ -273,7 +273,7 @@ def register_vision_tools(
                 object_name=validated_object_name,
             )
 
-            return json.dumps(result.dict(), indent=2)
+            return json.dumps(result.model_dump(), indent=2)
 
         except Exception as e:
             return _create_error_response(
@@ -304,7 +304,7 @@ def register_vision_tools(
                 object_name=validated_object_name,
             )
 
-            return json.dumps(result.dict(), indent=2)
+            return json.dumps(result.model_dump(), indent=2)
 
         except Exception as e:
             return _create_error_response(
@@ -374,7 +374,7 @@ def register_vision_tools(
                 params=params,
             )
 
-            return json.dumps(result.dict(), indent=2)
+            return json.dumps(result.model_dump(), indent=2)
 
         except Exception as e:
             return _create_error_response(
@@ -467,7 +467,7 @@ def register_vision_tools(
                             image_path=image_path,
                             params=params,
                         )
-                        return result.dict()
+                        return result.model_dump()
                     except Exception as e:
                         # Return error result for this specific image
                         error_result = _create_error_response_dict(
