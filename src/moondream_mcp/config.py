@@ -204,7 +204,10 @@ class Config:
         # Check PyTorch version
         torch_version = torch.__version__
         if not torch_version.startswith(("2.", "1.13", "1.14")):
-            print(f"⚠️  Warning: PyTorch {torch_version} may not be fully supported", file=sys.stderr)
+            print(
+                f"⚠️  Warning: PyTorch {torch_version} may not be fully supported",
+                file=sys.stderr,
+            )
 
         # Check device availability
         if self.device == "cuda" and not torch.cuda.is_available():

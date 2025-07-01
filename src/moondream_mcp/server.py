@@ -67,9 +67,12 @@ async def run_server_async() -> None:
     def signal_handler(signum: int, frame: Optional[object]) -> None:
         nonlocal force_shutdown_count
         force_shutdown_count += 1
-        
+
         if force_shutdown_count == 1:
-            print(f"\n🛑 Received signal {signum}, shutting down gracefully...", file=sys.stderr)
+            print(
+                f"\n🛑 Received signal {signum}, shutting down gracefully...",
+                file=sys.stderr,
+            )
             shutdown_event.set()
         elif force_shutdown_count == 2:
             print("\n⚠️  Press Ctrl+C again to force shutdown", file=sys.stderr)
@@ -85,7 +88,10 @@ async def run_server_async() -> None:
         # Use the moondream client as an async context manager
         async with moondream_client:
             print("🚀 Starting Moondream MCP Server...", file=sys.stderr)
-            print(f"📱 Device: {moondream_client.config.get_device_info()}", file=sys.stderr)
+            print(
+                f"📱 Device: {moondream_client.config.get_device_info()}",
+                file=sys.stderr,
+            )
             print("📡 Running MCP server with stdio transport", file=sys.stderr)
 
             # Create a task for the server
@@ -108,7 +114,7 @@ async def run_server_async() -> None:
                     await asyncio.wait_for(server_task, timeout=5.0)
                 except (asyncio.CancelledError, asyncio.TimeoutError):
                     pass
-            
+
             # Cancel any remaining pending tasks
             for task in pending:
                 task.cancel()

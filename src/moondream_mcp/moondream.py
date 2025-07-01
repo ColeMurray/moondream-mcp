@@ -104,7 +104,7 @@ class MoondreamClient:
         try:
             print(
                 f"🔄 Loading Moondream model: {self.config.model_name}@{self.config.model_revision}",
-                file=sys.stderr
+                file=sys.stderr,
             )
 
             # Set device
