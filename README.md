@@ -97,6 +97,9 @@ The server can be configured using environment variables:
 - `MOONDREAM_TIMEOUT_SECONDS`: Processing timeout (default: `120`)
 - `MOONDREAM_MAX_CONCURRENT_REQUESTS`: Max concurrent requests (default: `5`)
 - `MOONDREAM_ENABLE_STREAMING`: Enable streaming for captions (default: `true`)
+- `MOONDREAM_MAX_BATCH_SIZE`: Maximum batch size for batch operations (default: `10`)
+- `MOONDREAM_BATCH_CONCURRENCY`: Concurrent batch processing limit (default: `3`)
+- `MOONDREAM_ENABLE_BATCH_PROGRESS`: Enable progress reporting for batch operations (default: `true`)
 
 ### Network (for URLs)
 

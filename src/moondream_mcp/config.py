@@ -1,14 +1,14 @@
 """
-Configuration management for moondream-mcp.
+Configuration management for Moondream MCP Server.
 
-Handles environment variables, validation, and default settings
-for the Moondream MCP server.
+Handles environment variables, device detection, and model configuration
+with sensible defaults and clear validation.
 """
 
 import os
 import platform
 from dataclasses import dataclass
-from typing import Literal, Tuple
+from typing import Literal, Optional, Tuple
 
 import torch
 
@@ -37,8 +37,6 @@ class Config:
     timeout_seconds: int = 120
     max_concurrent_requests: int = 5
     enable_streaming: bool = True
-
-    # Batch processing settings
     max_batch_size: int = 10
     batch_concurrency: int = 3
     enable_batch_progress: bool = True
@@ -107,8 +105,6 @@ class Config:
         config.enable_streaming = _parse_bool(
             os.getenv("MOONDREAM_ENABLE_STREAMING", "true")
         )
-
-        # Batch processing settings
         config.max_batch_size = int(
             os.getenv("MOONDREAM_MAX_BATCH_SIZE", str(config.max_batch_size))
         )
@@ -173,12 +169,12 @@ class Config:
         if self.max_concurrent_requests > 50:
             raise ValueError("max_concurrent_requests cannot exceed 50")
 
-        # Validate batch processing settings
+        # Validate batch settings
         if self.max_batch_size < 1:
             raise ValueError("max_batch_size must be at least 1")
         if self.max_batch_size > 100:
             raise ValueError("max_batch_size cannot exceed 100")
-
+        
         if self.batch_concurrency < 1:
             raise ValueError("batch_concurrency must be at least 1")
         if self.batch_concurrency > self.max_concurrent_requests:
@@ -193,11 +189,11 @@ class Config:
     def validate_dependencies(self) -> None:
         """Validate that required dependencies are available."""
         try:
-            import aiohttp  # noqa: F401
-            import requests  # noqa: F401
-            import torch  # noqa: F401
-            import transformers  # noqa: F401
-            from PIL import Image  # noqa: F401
+            import aiohttp
+            import requests
+            import torch
+            import transformers
+            from PIL import Image
         except ImportError as e:
             raise ValueError(
                 f"Missing required dependency: {e.name}. "

@@ -51,10 +51,6 @@ def create_server() -> tuple[FastMCP, MoondreamClient]:
     print("   • point_objects - Object localization with coordinates")
     print("   • analyze_image - Multi-purpose image analysis")
     print("   • batch_analyze_images - Batch image processing")
-    print(
-        f"   • Batch processing: max {config.max_batch_size} images, "
-        f"{config.batch_concurrency} concurrent"
-    )
 
     return mcp, moondream_client
 

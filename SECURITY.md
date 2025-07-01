@@ -19,7 +19,7 @@ Please **do not** create a public GitHub issue for security vulnerabilities. Thi
 
 ### 2. Report Privately
 
-Send an email to: **security@[your-domain].com** (replace with actual contact)
+Please report security vulnerabilities via GitHub Security Advisories at: https://github.com/ColeMurray/moondream-mcp/security/advisories/new
 
 Include the following information:
 - Description of the vulnerability
@@ -217,7 +217,7 @@ Security researchers who responsibly disclose vulnerabilities will be:
 
 For security-related questions or concerns:
 
-- **Security Email**: security@[your-domain].com
+- **Security Reports**: GitHub Security Advisories at https://github.com/ColeMurray/moondream-mcp/security/advisories/new
 - **General Issues**: GitHub Issues (for non-security bugs)
 - **Documentation**: GitHub Discussions
 
