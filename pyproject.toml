@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "moondream-mcp"
-version = "1.0.0"
+version = "1.0.2"
 description = "FastMCP server for Moondream vision language model"
 readme = "README.md"
 license = {text = "MIT"}
