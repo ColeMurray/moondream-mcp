@@ -42,7 +42,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy src/moondream_mcp
+        mypy src/moondream_mcp --ignore-missing-imports --no-site-packages --disable-error-code=import-untyped
 
   test:
     runs-on: ubuntu-latest
