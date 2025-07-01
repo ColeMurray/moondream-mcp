@@ -159,8 +159,7 @@ class StandardError(BaseModel):
     error_code: str = Field(..., description="Machine-readable error code")
 
     error_context: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Additional context about the error"
+        default_factory=dict, description="Additional context about the error"
     )
 
     timestamp: Optional[str] = Field(

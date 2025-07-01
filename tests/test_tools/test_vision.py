@@ -312,16 +312,13 @@ class TestVisionTools:
 
         # Test with typed parameters instead of JSON
         result = await analyze_func(
-            image_path="test.jpg", 
-            operation="caption", 
-            length="normal",
-            stream=False
+            image_path="test.jpg", operation="caption", length="normal", stream=False
         )
 
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert result_data["caption"] == "A beautiful sunset"
-        
+
         # Verify the client was called with correct parameters
         mock_client.caption_image.assert_called_once_with(
             image_path="test.jpg",
@@ -339,9 +336,7 @@ class TestVisionTools:
         # Get the analyze_image function
         analyze_func = self._get_registered_function(mock_mcp, "analyze")
 
-        result = await analyze_func(
-            "test.jpg", "invalid_op", "", "", "normal", False
-        )
+        result = await analyze_func("test.jpg", "invalid_op", "", "", "normal", False)
         result_data = json.loads(result)
 
         assert result_data["success"] is False
@@ -360,7 +355,7 @@ class TestVisionTools:
 
         # Test query operation without question
         result = await analyze_func(
-            image_path="test.jpg", 
+            image_path="test.jpg",
             operation="query"
             # Missing question parameter
         )
@@ -371,7 +366,7 @@ class TestVisionTools:
 
         # Test detect operation without object_name
         result = await analyze_func(
-            image_path="test.jpg", 
+            image_path="test.jpg",
             operation="detect"
             # Missing object_name parameter
         )
@@ -399,15 +394,13 @@ class TestVisionTools:
 
         # Use typed parameters instead of JSON
         result = await batch_func(
-            image_paths=image_paths, 
-            operation="caption", 
-            length="normal"
+            image_paths=image_paths, operation="caption", length="normal"
         )
 
         result_data = json.loads(result)
         assert result_data["total_processed"] == 2
         assert result_data["successful_count"] == 2  # Updated field name
-        assert result_data["failed_count"] == 0      # Updated field name
+        assert result_data["failed_count"] == 0  # Updated field name
         assert len(result_data["results"]) == 2
 
     @pytest.mark.asyncio
@@ -421,30 +414,21 @@ class TestVisionTools:
         batch_func = self._get_registered_function(mock_mcp, "batch")
 
         # Test invalid JSON
-        result = await batch_func(
-            image_paths="invalid json", 
-            operation="caption"
-        )
+        result = await batch_func(image_paths="invalid json", operation="caption")
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert "Invalid JSON format" in result_data["error_message"]
         assert result_data["error_code"] == "INVALID_JSON"
 
         # Test non-array
-        result = await batch_func(
-            image_paths='"not an array"',
-            operation="caption"
-        )
+        result = await batch_func(image_paths='"not an array"', operation="caption")
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert "Image paths must be a JSON array" in result_data["error_message"]
         assert result_data["error_code"] == "INVALID_PATHS_TYPE"
 
         # Test empty array
-        result = await batch_func(
-            image_paths="[]",
-            operation="caption"
-        )
+        result = await batch_func(image_paths="[]", operation="caption")
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert "Image paths array cannot be empty" in result_data["error_message"]
@@ -478,18 +462,18 @@ class TestVisionTools:
         # Test with typed parameters instead of JSON
         image_paths = json.dumps(["test1.jpg", "test2.jpg"])
         result = await batch_func(
-            image_paths=image_paths, 
-            operation="caption", 
-            length="normal"
+            image_paths=image_paths, operation="caption", length="normal"
         )
 
         result_data = json.loads(result)
-        
+
         # Check if this is an error response instead of batch result
         if "success" in result_data and not result_data["success"]:
             # This is an error response, not a batch result
-            assert False, f"Batch processing failed: {result_data.get('error_message', 'Unknown error')}"
-        
+            assert (
+                False
+            ), f"Batch processing failed: {result_data.get('error_message', 'Unknown error')}"
+
         assert result_data["total_processed"] == 2
         assert result_data["successful_count"] == 1
         assert result_data["failed_count"] == 1
@@ -520,15 +504,13 @@ class TestVisionTools:
 
         # Test with typed parameters instead of JSON
         result = await analyze_func(
-            image_path="test.jpg", 
-            operation="query", 
-            question="What is this?"
+            image_path="test.jpg", operation="query", question="What is this?"
         )
 
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert result_data["answer"] == "This is a test image"
-        
+
         # Verify the client was called with correct parameters
         mock_client.query_image.assert_called_once_with(
             image_path="test.jpg",

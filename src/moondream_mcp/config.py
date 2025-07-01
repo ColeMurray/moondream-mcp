@@ -174,7 +174,7 @@ class Config:
             raise ValueError("max_batch_size must be at least 1")
         if self.max_batch_size > 100:
             raise ValueError("max_batch_size cannot exceed 100")
-        
+
         if self.batch_concurrency < 1:
             raise ValueError("batch_concurrency must be at least 1")
         if self.batch_concurrency > self.max_concurrent_requests:

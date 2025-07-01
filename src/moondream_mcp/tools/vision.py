@@ -73,8 +73,7 @@ async def _route_single_operation(
         question = params.get("question")
         if not question:
             raise ValidationError(
-                "question parameter is required for query operation",
-                "MISSING_QUESTION"
+                "question parameter is required for query operation", "MISSING_QUESTION"
             )
 
         # Validate question
@@ -90,7 +89,7 @@ async def _route_single_operation(
         if not object_name:
             raise ValidationError(
                 "object_name parameter is required for detect operation",
-                "MISSING_OBJECT_NAME"
+                "MISSING_OBJECT_NAME",
             )
 
         # Validate object name
@@ -106,7 +105,7 @@ async def _route_single_operation(
         if not object_name:
             raise ValidationError(
                 "object_name parameter is required for point operation",
-                "MISSING_OBJECT_NAME"
+                "MISSING_OBJECT_NAME",
             )
 
         # Validate object name
@@ -123,9 +122,7 @@ async def _route_single_operation(
 
 
 def _create_error_response_dict(
-    error: Exception,
-    operation: str,
-    context: Optional[Dict[str, Any]] = None
+    error: Exception, operation: str, context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Create standardized error response as dictionary."""
     from datetime import datetime, timezone
@@ -160,9 +157,7 @@ def _create_error_response_dict(
 
 
 def _create_error_response(
-    error: Exception,
-    operation: str,
-    context: Optional[Dict[str, Any]] = None
+    error: Exception, operation: str, context: Optional[Dict[str, Any]] = None
 ) -> str:
     """Create standardized error response as JSON string."""
     error_dict = _create_error_response_dict(error, operation, context)
@@ -172,7 +167,7 @@ def _create_error_response(
 def register_vision_tools(
     mcp: "FastMCP",
     moondream_client: "MoondreamClient",
-    config: Optional["Config"] = None
+    config: Optional["Config"] = None,
 ) -> None:
     """Register vision analysis MCP tools."""
 
@@ -217,7 +212,7 @@ def register_vision_tools(
             return _create_error_response(
                 error=e,
                 operation="caption",
-                context={"image_path": image_path, "length": length, "stream": stream}
+                context={"image_path": image_path, "length": length, "stream": stream},
             )
 
     @mcp.tool()
@@ -248,7 +243,7 @@ def register_vision_tools(
             return _create_error_response(
                 error=e,
                 operation="query",
-                context={"image_path": image_path, "question": question}
+                context={"image_path": image_path, "question": question},
             )
 
     @mcp.tool()
@@ -279,7 +274,7 @@ def register_vision_tools(
             return _create_error_response(
                 error=e,
                 operation="detect",
-                context={"image_path": image_path, "object_name": object_name}
+                context={"image_path": image_path, "object_name": object_name},
             )
 
     @mcp.tool()
@@ -310,7 +305,7 @@ def register_vision_tools(
             return _create_error_response(
                 error=e,
                 operation="point",
-                context={"image_path": image_path, "object_name": object_name}
+                context={"image_path": image_path, "object_name": object_name},
             )
 
     @mcp.tool()
@@ -354,7 +349,7 @@ def register_vision_tools(
                 if not question.strip():
                     raise ValidationError(
                         "question parameter is required for query operation",
-                        "MISSING_QUESTION"
+                        "MISSING_QUESTION",
                     )
                 params = {"question": question}
             elif validated_operation in ("detect", "point"):
@@ -362,7 +357,7 @@ def register_vision_tools(
                     raise ValidationError(
                         f"object_name parameter is required for "
                         f"{validated_operation} operation",
-                        "MISSING_OBJECT_NAME"
+                        "MISSING_OBJECT_NAME",
                     )
                 params = {"object_name": object_name}
 
@@ -386,7 +381,7 @@ def register_vision_tools(
                     "object_name": object_name,
                     "length": length,
                     "stream": stream,
-                }
+                },
             )
 
     @mcp.tool()
@@ -427,7 +422,7 @@ def register_vision_tools(
                 raise ValidationError(
                     f"Batch size {len(validated_paths)} exceeds maximum "
                     f"allowed {config.max_batch_size}",
-                    "BATCH_SIZE_EXCEEDED"
+                    "BATCH_SIZE_EXCEEDED",
                 )
 
             # Build parameters based on operation type
@@ -442,7 +437,7 @@ def register_vision_tools(
                 if not question.strip():
                     raise ValidationError(
                         "question parameter is required for query operation",
-                        "MISSING_QUESTION"
+                        "MISSING_QUESTION",
                     )
                 params = {"question": question}
             elif validated_operation in ("detect", "point"):
@@ -450,7 +445,7 @@ def register_vision_tools(
                     raise ValidationError(
                         f"object_name parameter is required for "
                         f"{validated_operation} operation",
-                        "MISSING_OBJECT_NAME"
+                        "MISSING_OBJECT_NAME",
                     )
                 params = {"object_name": object_name}
 
@@ -473,7 +468,7 @@ def register_vision_tools(
                         error_result = _create_error_response_dict(
                             error=e,
                             operation=validated_operation,
-                            context={"image_path": image_path}
+                            context={"image_path": image_path},
                         )
                         return error_result
 
@@ -482,7 +477,9 @@ def register_vision_tools(
             results = await asyncio.gather(*tasks, return_exceptions=False)
 
             # Calculate statistics
-            successful_count = sum(1 for result in results if result.get("success", False))
+            successful_count = sum(
+                1 for result in results if result.get("success", False)
+            )
             failed_count = len(results) - successful_count
 
             # Sum individual processing times if available (handle None values)
@@ -509,7 +506,7 @@ def register_vision_tools(
                     "batch_size": len(validated_paths),
                     "concurrency": config.batch_concurrency,
                     "operation_params": params,
-                }
+                },
             }
 
             return json.dumps(batch_result, indent=2)
@@ -524,5 +521,5 @@ def register_vision_tools(
                     "object_name": object_name,
                     "length": length,
                     "stream": stream,
-                }
+                },
             )

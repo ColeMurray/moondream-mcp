@@ -74,7 +74,7 @@ def validate_question(question: str) -> str:
     if len(question) > 1000:
         raise ValidationError(
             f"Question too long: {len(question)} characters (max 1000)",
-            "QUESTION_TOO_LONG"
+            "QUESTION_TOO_LONG",
         )
 
     return question
@@ -101,15 +101,15 @@ def validate_object_name(object_name: str) -> str:
     if len(object_name) > 100:
         raise ValidationError(
             f"Object name too long: {len(object_name)} characters (max 100)",
-            "OBJECT_NAME_TOO_LONG"
+            "OBJECT_NAME_TOO_LONG",
         )
 
     # Check for potentially dangerous characters
-    dangerous_chars = ['<', '>', '"', "'"]
+    dangerous_chars = ["<", ">", '"', "'"]
     if any(char in object_name for char in dangerous_chars):
         raise ValidationError(
             f"Object name contains invalid characters: {object_name}",
-            "INVALID_OBJECT_NAME"
+            "INVALID_OBJECT_NAME",
         )
 
     return object_name
@@ -134,7 +134,7 @@ def validate_caption_length(length: str) -> CaptionLength:
         valid_lengths = [e.value for e in CaptionLength]
         raise ValidationError(
             f"Invalid caption length '{length}'. Valid options: {valid_lengths}",
-            "INVALID_LENGTH"
+            "INVALID_LENGTH",
         )
 
 
@@ -156,7 +156,7 @@ def validate_operation(operation: str) -> str:
     if operation not in valid_operations:
         raise ValidationError(
             f"Invalid operation '{operation}'. Valid operations: {valid_operations}",
-            "INVALID_OPERATION"
+            "INVALID_OPERATION",
         )
 
     return operation
@@ -184,10 +184,7 @@ def validate_image_paths_list(paths_json: str) -> List[str]:
         raise ValidationError(f"Invalid JSON format: {str(e)}", "INVALID_JSON")
 
     if not isinstance(paths_data, list):
-        raise ValidationError(
-            "Image paths must be a JSON array",
-            "INVALID_PATHS_TYPE"
-        )
+        raise ValidationError("Image paths must be a JSON array", "INVALID_PATHS_TYPE")
 
     if len(paths_data) == 0:
         raise ValidationError("Image paths array cannot be empty", "EMPTY_PATHS_ARRAY")
@@ -197,7 +194,7 @@ def validate_image_paths_list(paths_json: str) -> List[str]:
         if not isinstance(path, str):
             raise ValidationError(
                 f"Path at index {i} must be a string, got {type(path).__name__}",
-                "INVALID_PATH_TYPE"
+                "INVALID_PATH_TYPE",
             )
 
         try:
@@ -205,10 +202,7 @@ def validate_image_paths_list(paths_json: str) -> List[str]:
             validated_paths.append(validated_path)
         except ValidationError as e:
             # Re-raise with index information
-            raise ValidationError(
-                f"Path at index {i}: {e.message}",
-                e.error_code
-            )
+            raise ValidationError(f"Path at index {i}: {e.message}", e.error_code)
 
     return validated_paths
 
@@ -235,18 +229,13 @@ def validate_json_parameters(params_json: str) -> Dict[str, Any]:
         raise ValidationError(f"Invalid JSON format: {str(e)}", "INVALID_JSON")
 
     if not isinstance(params_data, dict):
-        raise ValidationError(
-            "Parameters must be a JSON object",
-            "INVALID_PARAMS_TYPE"
-        )
+        raise ValidationError("Parameters must be a JSON object", "INVALID_PARAMS_TYPE")
 
     return params_data
 
 
 def sanitize_string(
-    value: Any,
-    max_length: int = 10000,
-    allowed_chars: str = None
+    value: Any, max_length: int = 10000, allowed_chars: str = None
 ) -> str:
     """
     Sanitize and validate string input.
@@ -264,12 +253,11 @@ def sanitize_string(
     """
     if not isinstance(value, str):
         raise ValidationError(
-            f"Expected string, got {type(value).__name__}",
-            "INVALID_TYPE"
+            f"Expected string, got {type(value).__name__}", "INVALID_TYPE"
         )
 
     # Remove control characters except tab and newline
-    sanitized = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f]', '', value)
+    sanitized = re.sub(r"[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f]", "", value)
 
     # Strip whitespace
     sanitized = sanitized.strip()
@@ -277,7 +265,7 @@ def sanitize_string(
     if len(sanitized) > max_length:
         raise ValidationError(
             f"String too long: {len(sanitized)} characters (max {max_length})",
-            "STRING_TOO_LONG"
+            "STRING_TOO_LONG",
         )
 
     return sanitized

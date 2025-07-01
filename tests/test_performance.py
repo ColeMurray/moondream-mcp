@@ -65,7 +65,7 @@ class TestPerformance:
             caption="Test caption",
             length=CaptionLength.NORMAL,
             processing_time_ms=50.0,  # Fast processing
-            metadata={"test": True}
+            metadata={"test": True},
         )
 
         register_vision_tools(mock_mcp, mock_client, performance_config)
@@ -73,26 +73,24 @@ class TestPerformance:
 
         # Test with 10 images
         image_paths = json.dumps([f"image{i}.jpg" for i in range(10)])
-        
+
         start_time = time.time()
         result = await batch_func(
-            image_paths=image_paths,
-            operation="caption",
-            length="normal"
+            image_paths=image_paths, operation="caption", length="normal"
         )
         elapsed_time = time.time() - start_time
 
         # Parse result
         result_data = json.loads(result)
-        
+
         # Performance assertions
         assert result_data["total_processed"] == 10
         assert result_data["successful_count"] == 10
         assert elapsed_time < 5.0  # Should complete in under 5 seconds
-        
+
         # Verify parallel processing was used
         assert mock_client.caption_image.call_count == 10
-        
+
         # Check timing metrics
         assert "batch_processing_time_ms" in result_data
         assert "individual_processing_time_ms" in result_data
@@ -103,6 +101,7 @@ class TestPerformance:
         self, mock_mcp: MagicMock, mock_client: AsyncMock, performance_config: Config
     ):
         """Test handling of concurrent requests."""
+
         # Mock responses with varying processing times
         def mock_caption_side_effect(*args, **kwargs):
             # Simulate varying processing times
@@ -112,7 +111,7 @@ class TestPerformance:
                 caption="Concurrent test",
                 length=CaptionLength.NORMAL,
                 processing_time_ms=processing_time,
-                metadata={"concurrent": True}
+                metadata={"concurrent": True},
             )
 
         mock_client.caption_image.side_effect = mock_caption_side_effect
@@ -144,9 +143,10 @@ class TestPerformance:
         self, mock_mcp: MagicMock, mock_client: AsyncMock, performance_config: Config
     ):
         """Test that errors in batch processing don't significantly impact performance."""
+
         # Mock mixed success/failure responses
         def mock_caption_side_effect(*args, **kwargs):
-            image_path = kwargs.get('image_path', args[0] if args else '')
+            image_path = kwargs.get("image_path", args[0] if args else "")
             if "fail" in image_path:
                 raise Exception("Simulated failure")
             return CaptionResult(
@@ -154,7 +154,7 @@ class TestPerformance:
                 caption="Success",
                 length=CaptionLength.NORMAL,
                 processing_time_ms=50.0,
-                metadata={"test": True}
+                metadata={"test": True},
             )
 
         mock_client.caption_image.side_effect = mock_caption_side_effect
@@ -163,21 +163,25 @@ class TestPerformance:
         batch_func = self._get_registered_function(mock_mcp, "batch")
 
         # Mix of successful and failing images
-        image_paths = json.dumps([
-            "image1.jpg", "fail1.jpg", "image2.jpg", 
-            "fail2.jpg", "image3.jpg", "image4.jpg"
-        ])
+        image_paths = json.dumps(
+            [
+                "image1.jpg",
+                "fail1.jpg",
+                "image2.jpg",
+                "fail2.jpg",
+                "image3.jpg",
+                "image4.jpg",
+            ]
+        )
 
         start_time = time.time()
         result = await batch_func(
-            image_paths=image_paths,
-            operation="caption",
-            length="normal"
+            image_paths=image_paths, operation="caption", length="normal"
         )
         elapsed_time = time.time() - start_time
 
         result_data = json.loads(result)
-        
+
         # Should complete quickly despite errors
         assert elapsed_time < 3.0
         assert result_data["total_processed"] == 6
@@ -195,7 +199,7 @@ class TestPerformance:
             caption="Memory test",
             length=CaptionLength.SHORT,
             processing_time_ms=10.0,
-            metadata={}  # Minimal metadata
+            metadata={},  # Minimal metadata
         )
 
         register_vision_tools(mock_mcp, mock_client, performance_config)
@@ -206,17 +210,15 @@ class TestPerformance:
         image_paths = json.dumps([f"image{i}.jpg" for i in range(max_batch)])
 
         result = await batch_func(
-            image_paths=image_paths,
-            operation="caption",
-            length="short"
+            image_paths=image_paths, operation="caption", length="short"
         )
 
         result_data = json.loads(result)
-        
+
         # Should handle maximum batch size successfully
         assert result_data["total_processed"] == max_batch
         assert result_data["successful_count"] == max_batch
-        
+
         # Verify all results are present
         assert len(result_data["results"]) == max_batch
 
@@ -249,7 +251,7 @@ class TestIntegration:
             caption="Integration test image",
             length=CaptionLength.NORMAL,
             processing_time_ms=100.0,
-            metadata={"integration": True}
+            metadata={"integration": True},
         )
 
         # Register tools
@@ -284,7 +286,7 @@ class TestIntegration:
         mock_mcp.tool.return_value = mock_decorator
 
         mock_client = AsyncMock()
-        
+
         # Test different types of errors
         error_scenarios = [
             (FileNotFoundError("File not found"), "FILE_NOT_FOUND"),
@@ -335,7 +337,7 @@ class TestIntegration:
             caption="Config test",
             length=CaptionLength.NORMAL,
             processing_time_ms=50.0,
-            metadata={}
+            metadata={},
         )
 
         register_vision_tools(mock_mcp, mock_client, custom_config)
@@ -350,14 +352,14 @@ class TestIntegration:
                     break
 
         # Test batch size limit enforcement
-        large_batch = json.dumps([f"image{i}.jpg" for i in range(5)])  # Exceeds limit of 3
-        
+        large_batch = json.dumps(
+            [f"image{i}.jpg" for i in range(5)]
+        )  # Exceeds limit of 3
+
         result = await batch_func(
-            image_paths=large_batch,
-            operation="caption",
-            length="normal"
+            image_paths=large_batch, operation="caption", length="normal"
         )
-        
+
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert "BATCH_SIZE_EXCEEDED" in result_data["error_code"]
@@ -396,11 +398,9 @@ class TestIntegration:
 
         for image_path, operation, extra_params, expected_error in validation_tests:
             result = await analyze_func(
-                image_path=image_path,
-                operation=operation,
-                **extra_params
+                image_path=image_path, operation=operation, **extra_params
             )
-            
+
             result_data = json.loads(result)
             assert result_data["success"] is False
             assert expected_error in result_data["error_code"]
@@ -423,7 +423,7 @@ class TestStressTests:
             caption="Stress test",
             length=CaptionLength.NORMAL,
             processing_time_ms=10.0,
-            metadata={}
+            metadata={},
         )
 
         config = Config(max_concurrent_requests=16, batch_concurrency=8)
@@ -468,7 +468,7 @@ class TestStressTests:
             caption="Memory stress test",
             length=CaptionLength.NORMAL,
             processing_time_ms=5.0,
-            metadata={}
+            metadata={},
         )
 
         config = Config(max_batch_size=50, batch_concurrency=10)
@@ -485,14 +485,14 @@ class TestStressTests:
 
         # Process multiple large batches
         for batch_num in range(3):
-            image_paths = json.dumps([f"batch{batch_num}_image{i}.jpg" for i in range(50)])
-            
-            result = await batch_func(
-                image_paths=image_paths,
-                operation="caption",
-                length="normal"
+            image_paths = json.dumps(
+                [f"batch{batch_num}_image{i}.jpg" for i in range(50)]
             )
-            
+
+            result = await batch_func(
+                image_paths=image_paths, operation="caption", length="normal"
+            )
+
             result_data = json.loads(result)
             assert result_data["total_processed"] == 50
-            assert result_data["successful_count"] == 50 
+            assert result_data["successful_count"] == 50

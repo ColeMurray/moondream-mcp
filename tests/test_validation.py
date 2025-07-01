@@ -158,7 +158,7 @@ class TestValidateObjectName:
     def test_validate_object_name_invalid_characters(self):
         """Test validation with invalid characters."""
         invalid_names = ["person<script>", "car>alert", 'dog"test', "cat'hack"]
-        
+
         for name in invalid_names:
             with pytest.raises(ValidationError) as exc_info:
                 validate_object_name(name)
@@ -183,7 +183,7 @@ class TestValidateCaptionLength:
     def test_validate_caption_length_invalid(self):
         """Test validation with invalid caption lengths."""
         invalid_lengths = ["brief", "long", "medium", ""]
-        
+
         for length in invalid_lengths:
             with pytest.raises(ValidationError) as exc_info:
                 validate_caption_length(length)
@@ -196,7 +196,7 @@ class TestValidateOperation:
     def test_validate_operation_valid(self):
         """Test validation of valid operations."""
         valid_operations = ["caption", "query", "detect", "point"]
-        
+
         for operation in valid_operations:
             result = validate_operation(operation)
             assert result == operation
@@ -204,7 +204,7 @@ class TestValidateOperation:
     def test_validate_operation_invalid(self):
         """Test validation with invalid operations."""
         invalid_operations = ["analyze", "process", "generate", ""]
-        
+
         for operation in invalid_operations:
             with pytest.raises(ValidationError) as exc_info:
                 validate_operation(operation)
@@ -218,7 +218,10 @@ class TestValidateImagePathsList:
         """Test validation of valid image paths lists."""
         paths_json = '["image1.jpg", "image2.jpg"]'
         result = validate_image_paths_list(paths_json)
-        expected = [str(Path("image1.jpg").expanduser()), str(Path("image2.jpg").expanduser())]
+        expected = [
+            str(Path("image1.jpg").expanduser()),
+            str(Path("image2.jpg").expanduser()),
+        ]
         assert result == expected
 
     def test_validate_image_paths_list_empty_string(self):
@@ -302,7 +305,7 @@ class TestValidateJsonParameters:
         assert exc_info.value.error_code == "INVALID_PARAMS_TYPE"
 
         with pytest.raises(ValidationError) as exc_info:
-            validate_json_parameters('[1, 2, 3]')
+            validate_json_parameters("[1, 2, 3]")
         assert exc_info.value.error_code == "INVALID_PARAMS_TYPE"
 
 
@@ -360,7 +363,7 @@ class TestIsUrl:
             "https://example.com/path/to/file.jpg",
             "ftp://example.com/file.txt",
         ]
-        
+
         for url in valid_urls:
             assert _is_url(url) is True
 
@@ -371,10 +374,10 @@ class TestIsUrl:
             "file.txt",
             "/local/path",
             "example.com",  # Missing scheme
-            "http://",      # Missing netloc
+            "http://",  # Missing netloc
             "",
         ]
-        
+
         for url in invalid_urls:
             assert _is_url(url) is False
 
@@ -386,7 +389,7 @@ class TestIsUrl:
             "://example.com",
             "http:/example.com",
         ]
-        
+
         for url in edge_cases:
             # Should not raise exception, just return False
-            assert _is_url(url) is False 
+            assert _is_url(url) is False

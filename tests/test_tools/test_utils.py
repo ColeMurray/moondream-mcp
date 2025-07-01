@@ -40,7 +40,7 @@ class TestCreateErrorResponse:
     def test_create_error_response_minimal(self):
         """Test creating error response with minimal parameters."""
         result = create_error_response("TEST_ERROR", "Test error message")
-        
+
         data = json.loads(result)
         assert data["success"] is False
         assert data["error_code"] == "TEST_ERROR"
@@ -52,7 +52,7 @@ class TestCreateErrorResponse:
         result = create_error_response(
             "TEST_ERROR", "Test error message", operation="caption"
         )
-        
+
         data = json.loads(result)
         assert data["operation"] == "caption"
 
@@ -61,19 +61,16 @@ class TestCreateErrorResponse:
         result = create_error_response(
             "TEST_ERROR", "Test error message", image_path="test.jpg"
         )
-        
+
         data = json.loads(result)
         assert data["image_path"] == "test.jpg"
 
     def test_create_error_response_complete(self):
         """Test creating error response with all parameters."""
         result = create_error_response(
-            "TEST_ERROR", 
-            "Test error message", 
-            operation="query",
-            image_path="test.jpg"
+            "TEST_ERROR", "Test error message", operation="query", image_path="test.jpg"
         )
-        
+
         data = json.loads(result)
         assert data["success"] is False
         assert data["error_code"] == "TEST_ERROR"
@@ -102,7 +99,7 @@ class TestValidateCaptionLength:
         """Test validation with invalid lengths."""
         with pytest.raises(ValueError, match="Invalid length"):
             validate_caption_length("invalid")
-        
+
         with pytest.raises(ValueError, match="Invalid length"):
             validate_caption_length("")
 
@@ -113,7 +110,7 @@ class TestValidateOperation:
     def test_validate_operation_valid(self):
         """Test validation of valid operations."""
         valid_operations = ["caption", "query", "detect", "point"]
-        
+
         for operation in valid_operations:
             result = validate_operation(operation)
             assert result == operation
@@ -122,7 +119,7 @@ class TestValidateOperation:
         """Test validation with invalid operations."""
         with pytest.raises(ValueError, match="Invalid operation"):
             validate_operation("invalid")
-        
+
         with pytest.raises(ValueError, match="Invalid operation"):
             validate_operation("")
 
@@ -150,9 +147,9 @@ class TestParseJsonParameters:
         """Test parsing non-object JSON."""
         with pytest.raises(ValueError, match="Parameters must be a JSON object"):
             parse_json_parameters('"not an object"')
-        
+
         with pytest.raises(ValueError, match="Parameters must be a JSON object"):
-            parse_json_parameters('[1, 2, 3]')
+            parse_json_parameters("[1, 2, 3]")
 
 
 class TestParseImagePaths:
@@ -208,12 +205,12 @@ class TestFormatResultAsJson:
             caption="A test image",
             length=CaptionLength.NORMAL,
             processing_time_ms=100.0,
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
-        
+
         json_str = format_result_as_json(result)
         data = json.loads(json_str)
-        
+
         assert data["success"] is True
         assert data["caption"] == "A test image"
         assert data["length"] == "normal"
@@ -225,12 +222,12 @@ class TestFormatResultAsJson:
             answer="Test answer",
             question="Test question?",
             processing_time_ms=150.0,
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
-        
+
         json_str = format_result_as_json(result)
         data = json.loads(json_str)
-        
+
         assert data["success"] is True
         assert data["answer"] == "Test answer"
         assert data["question"] == "Test question?"
@@ -240,21 +237,21 @@ class TestFormatResultAsJson:
         detected_object = DetectedObject(
             name="person",
             confidence=0.95,
-            bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4)
+            bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4),
         )
-        
+
         result = DetectionResult(
             success=True,
             objects=[detected_object],
             object_name="person",
             total_found=1,
             processing_time_ms=200.0,
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
-        
+
         json_str = format_result_as_json(result)
         data = json.loads(json_str)
-        
+
         assert data["success"] is True
         assert data["total_found"] == 1
         assert len(data["objects"]) == 1
@@ -262,23 +259,21 @@ class TestFormatResultAsJson:
     def test_format_pointing_result(self):
         """Test formatting pointing result."""
         pointed_object = PointedObject(
-            name="car",
-            confidence=0.88,
-            point=Point(x=0.5, y=0.3)
+            name="car", confidence=0.88, point=Point(x=0.5, y=0.3)
         )
-        
+
         result = PointingResult(
             success=True,
             points=[pointed_object],
             object_name="car",
             total_found=1,
             processing_time_ms=180.0,
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
-        
+
         json_str = format_result_as_json(result)
         data = json.loads(json_str)
-        
+
         assert data["success"] is True
         assert data["total_found"] == 1
         assert len(data["points"]) == 1
@@ -293,9 +288,9 @@ class TestCreateBatchSummary:
             {"success": True, "caption": "Image 1"},
             {"success": True, "caption": "Image 2"},
         ]
-        
+
         summary = create_batch_summary(results, "caption", 500.0)
-        
+
         assert summary["operation"] == "caption"
         assert summary["total_processed"] == 2
         assert summary["total_successful"] == 2
@@ -311,9 +306,9 @@ class TestCreateBatchSummary:
             {"success": False, "error": "Failed"},
             {"success": True, "caption": "Image 3"},
         ]
-        
+
         summary = create_batch_summary(results, "caption", 750.0)
-        
+
         assert summary["total_processed"] == 3
         assert summary["total_successful"] == 2
         assert summary["total_failed"] == 1
@@ -325,16 +320,16 @@ class TestCreateBatchSummary:
             {"success": False, "error": "Failed 1"},
             {"success": False, "error": "Failed 2"},
         ]
-        
+
         summary = create_batch_summary(results, "query", 300.0)
-        
+
         assert summary["total_successful"] == 0
         assert summary["total_failed"] == 2
 
     def test_create_batch_summary_empty_results(self):
         """Test creating summary with empty results."""
         summary = create_batch_summary([], "caption", 0.0)
-        
+
         assert summary["total_processed"] == 0
         assert summary["total_successful"] == 0
         assert summary["total_failed"] == 0
@@ -449,9 +444,9 @@ class TestMeasureTimeMs:
         start_time = time.time()
         # Simulate some processing time
         time.sleep(0.01)  # 10ms
-        
+
         elapsed_ms = measure_time_ms(start_time)
-        
+
         # Should be approximately 10ms, but allow for some variance
         assert 5.0 <= elapsed_ms <= 50.0  # Allow for system variance
 
@@ -459,6 +454,6 @@ class TestMeasureTimeMs:
         """Test measuring time with immediate call."""
         start_time = time.time()
         elapsed_ms = measure_time_ms(start_time)
-        
+
         # Should be very small but positive
-        assert 0.0 <= elapsed_ms <= 10.0 
+        assert 0.0 <= elapsed_ms <= 10.0

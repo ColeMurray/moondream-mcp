@@ -28,10 +28,10 @@ class TestConfigExtended:
             "MOONDREAM_BATCH_CONCURRENCY": "5",
             "MOONDREAM_ENABLE_BATCH_PROGRESS": "false",
         }
-        
+
         with patch.dict(os.environ, env_vars, clear=False):
             config = Config.from_env()
-            
+
             assert config.model_name == "custom-model"
             assert config.device == "cuda"
             assert config.max_image_size == (2048, 2048)
@@ -59,16 +59,22 @@ class TestConfigExtended:
             ("", False),
             ("invalid", False),
         ]
-        
+
         for env_value, expected in boolean_tests:
-            with patch.dict(os.environ, {"MOONDREAM_ENABLE_STREAMING": env_value}, clear=False):
+            with patch.dict(
+                os.environ, {"MOONDREAM_ENABLE_STREAMING": env_value}, clear=False
+            ):
                 config = Config.from_env()
-                assert config.enable_streaming == expected, f"Failed for value: {env_value}"
+                assert (
+                    config.enable_streaming == expected
+                ), f"Failed for value: {env_value}"
 
     def test_config_from_env_integer_parsing_invalid(self):
         """Test integer environment variable parsing with invalid values."""
         with pytest.raises(ValueError, match="Invalid MOONDREAM_MAX_IMAGE_SIZE"):
-            with patch.dict(os.environ, {"MOONDREAM_MAX_IMAGE_SIZE": "invalid"}, clear=False):
+            with patch.dict(
+                os.environ, {"MOONDREAM_MAX_IMAGE_SIZE": "invalid"}, clear=False
+            ):
                 Config.from_env()
 
     def test_config_max_image_size_formats(self):
@@ -79,7 +85,9 @@ class TestConfigExtended:
             assert config.max_image_size == (1024, 1024)
 
         # Test width x height format
-        with patch.dict(os.environ, {"MOONDREAM_MAX_IMAGE_SIZE": "1920x1080"}, clear=False):
+        with patch.dict(
+            os.environ, {"MOONDREAM_MAX_IMAGE_SIZE": "1920x1080"}, clear=False
+        ):
             config = Config.from_env()
             assert config.max_image_size == (1920, 1080)
 
@@ -93,11 +101,15 @@ class TestConfigExtended:
         config._validate()  # Should not raise
 
         # Test invalid sizes
-        with pytest.raises(ValueError, match="max_image_size dimensions must be at least 1"):
+        with pytest.raises(
+            ValueError, match="max_image_size dimensions must be at least 1"
+        ):
             config = Config(max_image_size=(0, 100))
             config._validate()
 
-        with pytest.raises(ValueError, match="max_image_size dimensions cannot exceed 4096"):
+        with pytest.raises(
+            ValueError, match="max_image_size dimensions cannot exceed 4096"
+        ):
             config = Config(max_image_size=(5000, 100))
             config._validate()
 
@@ -125,11 +137,15 @@ class TestConfigExtended:
         config._validate()  # Should not raise
 
         # Test invalid values
-        with pytest.raises(ValueError, match="max_concurrent_requests must be at least 1"):
+        with pytest.raises(
+            ValueError, match="max_concurrent_requests must be at least 1"
+        ):
             config = Config(max_concurrent_requests=0, batch_concurrency=0)
             config._validate()
 
-        with pytest.raises(ValueError, match="max_concurrent_requests cannot exceed 50"):
+        with pytest.raises(
+            ValueError, match="max_concurrent_requests cannot exceed 50"
+        ):
             config = Config(max_concurrent_requests=51, batch_concurrency=3)
             config._validate()
 
@@ -165,7 +181,9 @@ class TestConfigExtended:
             config = Config(batch_concurrency=0)
             config._validate()
 
-        with pytest.raises(ValueError, match="batch_concurrency cannot exceed max_concurrent_requests"):
+        with pytest.raises(
+            ValueError, match="batch_concurrency cannot exceed max_concurrent_requests"
+        ):
             config = Config(batch_concurrency=10, max_concurrent_requests=5)
             config._validate()
 
@@ -173,14 +191,16 @@ class TestConfigExtended:
         """Test device validation."""
         # Test valid devices
         valid_devices = ["cpu", "cuda", "mps"]
-        
+
         for device in valid_devices:
             config = Config(device=device)
             assert config.device == device
 
         # Test invalid device through environment variable
         with pytest.raises(ValueError, match="Invalid MOONDREAM_DEVICE"):
-            with patch.dict(os.environ, {"MOONDREAM_DEVICE": "invalid_device"}, clear=False):
+            with patch.dict(
+                os.environ, {"MOONDREAM_DEVICE": "invalid_device"}, clear=False
+            ):
                 Config.from_env()
 
     def test_config_model_name_validation(self):
@@ -192,7 +212,7 @@ class TestConfigExtended:
             "local-model",
             "model_with_underscores",
         ]
-        
+
         for model_name in valid_models:
             config = Config(model_name=model_name)
             assert config.model_name == model_name
@@ -218,7 +238,7 @@ class TestConfigExtended:
     def test_config_repr_and_str(self):
         """Test string representation of config."""
         config = Config()
-        
+
         # Test __repr__
         repr_str = repr(config)
         assert "Config" in repr_str
@@ -235,7 +255,7 @@ class TestConfigExtended:
         """Test config equality comparison."""
         config1 = Config()
         config2 = Config()
-        
+
         # Should be equal with same parameters
         assert config1 == config2
 
@@ -277,14 +297,14 @@ class TestConfigExtended:
             "MOONDREAM_MAX_IMAGE_SIZE": "512",
             # Other variables not set, should use defaults
         }
-        
+
         with patch.dict(os.environ, partial_env, clear=False):
             config = Config.from_env()
-            
+
             # Set variables should use env values
             assert config.model_name == "partial-model"
             assert config.max_image_size == (512, 512)
-            
+
             # Unset variables should use defaults
             assert config.device in ["cpu", "cuda", "mps"]  # auto-detected
             assert config.request_timeout_seconds == 30  # default
@@ -293,11 +313,9 @@ class TestConfigExtended:
     def test_config_network_settings(self):
         """Test network-related configuration."""
         config = Config(
-            request_timeout_seconds=60,
-            max_redirects=10,
-            user_agent="Custom-Agent/1.0"
+            request_timeout_seconds=60, max_redirects=10, user_agent="Custom-Agent/1.0"
         )
-        
+
         assert config.request_timeout_seconds == 60
         assert config.max_redirects == 10
         assert config.user_agent == "Custom-Agent/1.0"
@@ -309,7 +327,9 @@ class TestConfigExtended:
         config._validate()  # Should not raise
 
         # Test invalid values
-        with pytest.raises(ValueError, match="request_timeout_seconds must be at least 1"):
+        with pytest.raises(
+            ValueError, match="request_timeout_seconds must be at least 1"
+        ):
             config = Config(request_timeout_seconds=0)
             config._validate()
 
@@ -320,7 +340,7 @@ class TestConfigExtended:
     def test_config_supported_formats(self):
         """Test supported image formats configuration."""
         config = Config()
-        
+
         # Check default supported formats
         assert "JPEG" in config.supported_formats
         assert "PNG" in config.supported_formats
@@ -335,7 +355,9 @@ class TestConfigExtended:
         assert config.model_revision == "2025-01-09"
 
         # Test custom revision via environment
-        with patch.dict(os.environ, {"MOONDREAM_MODEL_REVISION": "custom-rev"}, clear=False):
+        with patch.dict(
+            os.environ, {"MOONDREAM_MODEL_REVISION": "custom-rev"}, clear=False
+        ):
             config = Config.from_env()
             assert config.model_revision == "custom-rev"
 
@@ -346,6 +368,8 @@ class TestConfigExtended:
         assert config.trust_remote_code is True
 
         # Test via environment variable
-        with patch.dict(os.environ, {"MOONDREAM_TRUST_REMOTE_CODE": "false"}, clear=False):
+        with patch.dict(
+            os.environ, {"MOONDREAM_TRUST_REMOTE_CODE": "false"}, clear=False
+        ):
             config = Config.from_env()
-            assert config.trust_remote_code is False 
+            assert config.trust_remote_code is False
