@@ -161,7 +161,8 @@ class MoondreamClient:
         await self._ensure_session()
 
         # Type assertion to help mypy
-        assert self._session is not None
+        if self._session is None:
+            raise RuntimeError("Session not initialized")
 
         try:
             async with self._session.get(url) as response:
@@ -260,7 +261,8 @@ class MoondreamClient:
 
                 def _generate_caption() -> Dict[str, Any]:
                     # Type assertion to help mypy
-                    assert self._model is not None
+                    if self._model is None:
+                        raise RuntimeError("Model not initialized")
 
                     if stream and self.config.enable_streaming:
                         # Stream caption generation
@@ -329,7 +331,8 @@ class MoondreamClient:
 
                 def _query_image() -> Dict[str, Any]:
                     # Type assertion to help mypy
-                    assert self._model is not None
+                    if self._model is None:
+                        raise RuntimeError("Model not initialized")
                     result = self._model.query(image, question)
                     return {"answer": result["answer"]}
 
@@ -386,7 +389,8 @@ class MoondreamClient:
 
                 def _detect_objects() -> Dict[str, Any]:
                     # Type assertion to help mypy
-                    assert self._model is not None
+                    if self._model is None:
+                        raise RuntimeError("Model not initialized")
                     result = self._model.detect(image, object_name)
                     return {"objects": result["objects"]}
 
@@ -457,7 +461,8 @@ class MoondreamClient:
 
                 def _point_objects() -> Dict[str, Any]:
                     # Type assertion to help mypy
-                    assert self._model is not None
+                    if self._model is None:
+                        raise RuntimeError("Model not initialized")
                     result = self._model.point(image, object_name)
                     return {"points": result["points"]}
 
