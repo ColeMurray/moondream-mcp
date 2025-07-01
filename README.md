@@ -19,6 +19,16 @@ A FastMCP server for [Moondream](https://github.com/vikhyat/moondream), an AI vi
 - Python 3.10 or higher
 - PyTorch 2.0+ (with appropriate device support)
 
+### Using uvx (Recommended for Claude Desktop)
+
+```bash
+# Run without installation
+uvx moondream-mcp
+
+# Or specify a specific version
+uvx moondream-mcp==1.0.0
+```
+
 ### Install from PyPI
 
 ```bash
@@ -46,7 +56,10 @@ pip install -e ".[dev]"
 ### Running the Server
 
 ```bash
-# Run with default settings
+# Using uvx (no installation needed)
+uvx moondream-mcp
+
+# Using pip-installed command
 moondream-mcp
 
 # Or run directly with Python
@@ -59,6 +72,24 @@ Add to your Claude Desktop configuration file:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+#### Using uvx (Recommended)
+
+```json
+{
+  "mcpServers": {
+    "moondream": {
+      "command": "uvx",
+      "args": ["moondream-mcp"],
+      "env": {
+        "MOONDREAM_DEVICE": "auto"
+      }
+    }
+  }
+}
+```
+
+#### Using pip-installed command
 
 ```json
 {
