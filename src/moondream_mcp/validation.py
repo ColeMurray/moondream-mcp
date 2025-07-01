@@ -8,7 +8,7 @@ for all vision analysis operations.
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from .models import CaptionLength
@@ -235,7 +235,7 @@ def validate_json_parameters(params_json: str) -> Dict[str, Any]:
 
 
 def sanitize_string(
-    value: Any, max_length: int = 10000, allowed_chars: str = None
+    value: Any, max_length: int = 10000, allowed_chars: Optional[str] = None
 ) -> str:
     """
     Sanitize and validate string input.

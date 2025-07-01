@@ -5,6 +5,7 @@ FastMCP server for Moondream AI vision language model integration.
 """
 
 import asyncio
+import os
 import signal
 import sys
 from typing import Optional
@@ -22,17 +23,17 @@ def create_server() -> tuple[FastMCP, MoondreamClient]:
     # Load configuration
     try:
         config = Config.from_env()
-        print(f"✅ Configuration loaded: {config}")
+        print(f"✅ Configuration loaded: {config}", file=sys.stderr)
     except ValueError as e:
-        print(f"❌ Configuration error: {e}")
+        print(f"❌ Configuration error: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Validate dependencies
     try:
         config.validate_dependencies()
-        print("✅ Dependencies validated")
+        print("✅ Dependencies validated", file=sys.stderr)
     except ValueError as e:
-        print(f"❌ Dependency error: {e}")
+        print(f"❌ Dependency error: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Create MCP server
@@ -61,10 +62,20 @@ async def run_server_async() -> None:
 
     # Setup signal handlers for graceful shutdown
     shutdown_event = asyncio.Event()
+    force_shutdown_count = 0
 
     def signal_handler(signum: int, frame: Optional[object]) -> None:
-        print(f"\n🛑 Received signal {signum}, shutting down gracefully...")
-        shutdown_event.set()
+        nonlocal force_shutdown_count
+        force_shutdown_count += 1
+        
+        if force_shutdown_count == 1:
+            print(f"\n🛑 Received signal {signum}, shutting down gracefully...", file=sys.stderr)
+            shutdown_event.set()
+        elif force_shutdown_count == 2:
+            print("\n⚠️  Press Ctrl+C again to force shutdown", file=sys.stderr)
+        else:
+            print("\n💥 Force shutdown!", file=sys.stderr)
+            os._exit(1)
 
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
@@ -73,9 +84,9 @@ async def run_server_async() -> None:
     try:
         # Use the moondream client as an async context manager
         async with moondream_client:
-            print("🚀 Starting Moondream MCP Server...")
-            print(f"📱 Device: {moondream_client.config.get_device_info()}")
-            print("📡 Running MCP server with stdio transport")
+            print("🚀 Starting Moondream MCP Server...", file=sys.stderr)
+            print(f"📱 Device: {moondream_client.config.get_device_info()}", file=sys.stderr)
+            print("📡 Running MCP server with stdio transport", file=sys.stderr)
 
             # Create a task for the server
             server_task = asyncio.create_task(mcp.run_async(transport="stdio"))
@@ -88,7 +99,17 @@ async def run_server_async() -> None:
                 [server_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED
             )
 
-            # Cancel pending tasks
+            # If shutdown was triggered, cancel the server task
+            if shutdown_task in done:
+                print("🛑 Shutdown signal received, stopping server...", file=sys.stderr)
+                server_task.cancel()
+                try:
+                    # Give the server task a chance to clean up
+                    await asyncio.wait_for(server_task, timeout=5.0)
+                except (asyncio.CancelledError, asyncio.TimeoutError):
+                    pass
+            
+            # Cancel any remaining pending tasks
             for task in pending:
                 task.cancel()
                 try:
@@ -101,18 +122,18 @@ async def run_server_async() -> None:
                 try:
                     await server_task
                 except Exception as e:
-                    print(f"❌ Server error: {e}")
+                    print(f"❌ Server error: {e}", file=sys.stderr)
                     raise
 
     except KeyboardInterrupt:
-        print("\n🛑 Interrupted by user")
+        print("\n🛑 Interrupted by user", file=sys.stderr)
     except Exception as e:
-        print(f"❌ Server error: {e}")
+        print(f"❌ Server error: {e}", file=sys.stderr)
         raise
     finally:
-        print("🧹 Cleaning up resources...")
+        print("🧹 Cleaning up resources...", file=sys.stderr)
         # Cleanup is handled by the async context manager
-        print("✅ Shutdown complete")
+        print("✅ Shutdown complete", file=sys.stderr)
 
 
 def main() -> None:
@@ -120,17 +141,17 @@ def main() -> None:
     try:
         # Check Python version
         if sys.version_info < (3, 10):
-            print("❌ Python 3.10 or higher is required")
+            print("❌ Python 3.10 or higher is required", file=sys.stderr)
             sys.exit(1)
 
         # Run the async server
         asyncio.run(run_server_async())
 
     except KeyboardInterrupt:
-        print("\n🛑 Interrupted by user")
+        print("\n🛑 Interrupted by user", file=sys.stderr)
         sys.exit(0)
     except Exception as e:
-        print(f"❌ Fatal error: {e}")
+        print(f"❌ Fatal error: {e}", file=sys.stderr)
         sys.exit(1)
 
 

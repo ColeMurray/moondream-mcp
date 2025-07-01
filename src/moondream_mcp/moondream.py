@@ -7,6 +7,7 @@ visual question answering, object detection, and visual pointing.
 
 import asyncio
 import io
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -102,12 +103,13 @@ class MoondreamClient:
         """Load the Moondream model and tokenizer."""
         try:
             print(
-                f"🔄 Loading Moondream model: {self.config.model_name}@{self.config.model_revision}"
+                f"🔄 Loading Moondream model: {self.config.model_name}@{self.config.model_revision}",
+                file=sys.stderr
             )
 
             # Set device
             self._device = torch.device(self.config.device)
-            print(f"📱 Using device: {self.config.get_device_info()}")
+            print(f"📱 Using device: {self.config.get_device_info()}", file=sys.stderr)
 
             # Load model in a thread to avoid blocking
             loop = asyncio.get_event_loop()
@@ -129,7 +131,7 @@ class MoondreamClient:
             # Note: Moondream2 might not need a separate tokenizer
             # self._tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
 
-            print("✅ Moondream model loaded successfully")
+            print("✅ Moondream model loaded successfully", file=sys.stderr)
 
         except Exception as e:
             raise ModelLoadError(f"Failed to load Moondream model: {str(e)}")
@@ -530,4 +532,4 @@ class MoondreamClient:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-        print("🧹 Moondream client cleaned up")
+        print("🧹 Moondream client cleaned up", file=sys.stderr)
