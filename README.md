@@ -26,7 +26,7 @@ A FastMCP server for [Moondream](https://github.com/vikhyat/moondream), an AI vi
 uvx moondream-mcp
 
 # Or specify a specific version
-uvx moondream-mcp==1.0.0
+uvx moondream-mcp==1.0.2
 ```
 
 ### Install from PyPI
